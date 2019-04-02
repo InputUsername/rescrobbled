@@ -1,10 +1,12 @@
-use mpris::PlayerFinder;
+use mpris::{PlayerFinder, PlaybackStatus};
 use rustfm_scrobble::{Scrobble, Scrobbler};
 
 use std::process;
+use std::thread;
 use std::fs;
 use std::io;
 use std::io::Write;
+use std::time::Duration;
 
 mod config;
 
@@ -72,34 +74,56 @@ fn main() {
         }
     };
 
-    let meta = player.get_metadata()
-        .expect("Could not get metadata");
+    loop {
+        thread::sleep(Duration::from_secs(1));
 
-    let length = meta.length_in_microseconds()
-        .expect("No length in microseconds found for this track");
+        if !player.is_running() {
+            break;
+        }
 
-    if length < 30 * 1000 * 1000 {
-        println!("Not allowed to scrobble this track :(");
-        return;
+        let status = match player.get_playback_status() {
+            Ok(status) => status,
+            Err(err) => {
+                println!("Error retrieving playback status: {}", err);
+                process::exit(1);
+            },
+        };
+
+        if status != PlaybackStatus::Playing {
+            continue;
+        }
+
+        let meta = match player.get_metadata() {
+            Ok(meta) => meta,
+            Err(err) => {
+                println!("Error retrieving track metadata: {}", err);
+                process::exit(1);
+            },
+        };
+
+        // TODO: prevent reallocating every iteration
+
+        let artist = meta.artists()
+            .and_then(|artists| artists.first())
+            .map(|artist| artist.clone())
+            .unwrap_or_else(|| String::new());
+        
+        let title = meta.title()
+            .map(|title| title.to_owned())
+            .unwrap_or_else(|| String::new());
+
+        let album = meta.album_name()
+            .map(|album| album.to_owned())
+            .unwrap_or_else(|| String::new());
+
+        println!("Now playing: {} - {}\n{}", artist, title, album);
+        
+        let scrobble = Scrobble::new(artist, title, album);
+        let np_result = scrobbler.now_playing(scrobble)
+            .unwrap();
+
+        println!("Scrobble result: {:#?}", np_result);
+
+        // TODO: scrobble as well in addition to now playing
     }
-
-    let artist = meta.artists()
-        .expect("No artist list found for this track")
-        .first()
-        .expect("No artist found for this track");
-    let title = meta.title()
-        .expect("No title found for this track");
-    let album = meta.album_name()
-        .expect("No album name found for this track");
-
-    println!("Now playing: {} - {} ({})", artist, title, album);
-
-    let scrobble = Scrobble::new(artist.clone(), title.to_owned(), album.to_owned());
-    let np_result = scrobbler.now_playing(scrobble.clone())
-        .unwrap();
-    let scrobble_result = scrobbler.scrobble(scrobble)
-        .unwrap();
-
-    println!("Now playing result:\n{:#?}", np_result);
-    println!("Scrobble result:\n{:#?}", scrobble_result);
 }
