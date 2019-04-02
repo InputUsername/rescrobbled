@@ -56,10 +56,21 @@ fn main() {
         let _ = fs::write(SESSION_FILE, session_response.key);
     }
 
-    let player = PlayerFinder::new()
-        .expect("Could not connect to D-Bus")
-        .find_active()
-        .expect("Could not find any player");
+    let finder = match PlayerFinder::new() {
+        Ok(finder) => finder,
+        Err(_) => {
+            println!("Could not connect to D-Bus");
+            process::exit(1);
+        },
+    };
+
+    let player = match finder.find_active() {
+        Ok(player) => player,
+        Err(_) => {
+            println!("Could not find any active players");
+            process::exit(1);
+        }
+    };
 
     let meta = player.get_metadata()
         .expect("Could not get metadata");
