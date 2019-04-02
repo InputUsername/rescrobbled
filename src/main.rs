@@ -1,8 +1,13 @@
 use mpris::PlayerFinder;
 use rustfm_scrobble::{Scrobble, Scrobbler};
+
 use std::process;
+use std::fs;
+use std::io;
 
 mod config;
+
+const SESSION_FILE: &str = ".session";
 
 fn main() {
     let api_keys = match config::load_config() {
@@ -15,19 +20,34 @@ fn main() {
 
     let mut scrobbler = Scrobbler::new(api_keys.api_key, api_keys.api_secret);
 
-    let mut input = String::new();
-    std::io::stdin().read_line(&mut input)
-        .expect("Could not read username");
-    let username = input.trim().to_owned();
+    if let Ok(session_key) = fs::read_to_string(SESSION_FILE) {
+        // TODO: validate session
+        scrobbler.authenticate_with_session_key(session_key);
+    } else {
+        let mut input = String::new();
+        
+        io::stdin().read_line(&mut input)
+            .expect("Could not read username");
+        let username = input.trim().to_owned();
 
-    input.clear();
+        input.clear();
 
-    std::io::stdin().read_line(&mut input)
-        .expect("Could not read password");
-    let password = input.trim().to_owned();
+        io::stdin().read_line(&mut input)
+            .expect("Could not read password");
+        let password = input.trim().to_owned();
 
-    scrobbler.authenticate_with_password(username, password)
-        .expect("Could not authenticate with Last.fm");
+        let session_response = match scrobbler.authenticate_with_password(username, password) {
+            Ok(res) => res,
+            Err(err) => {
+                println!("Error authenticating with Last.fm: {}", err);
+                process::exit(1);
+            },
+        };
+
+        // We don't care whether storing the session works;
+        // it's simply convenient if it does
+        let _ = fs::write(SESSION_FILE, session_response.key);
+    }
 
     let player = PlayerFinder::new()
         .expect("Could not connect to D-Bus")
