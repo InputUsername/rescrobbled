@@ -1,69 +1,14 @@
 use mpris::PlayerFinder;
 use rustfm_scrobble::{Scrobble, Scrobbler};
-use std::fmt;
-use std::fs::File;
-use std::io;
-use std::io::prelude::*;
 use std::process;
-use toml::Value;
 
-struct ApiKeys {
-    api_key: String,
-    api_secret: String,
-}
-
-enum ConfigError {
-    Io(io::Error),
-    Format(String),
-}
-
-impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ConfigError::Io(err) => write!(f, "{}", err),
-            ConfigError::Format(msg) => write!(f, "{}", msg),
-        }
-    }
-}
-
-fn get_api_keys() -> Result<ApiKeys, ConfigError> {
-    let mut file = match File::open("config.toml") {
-        Ok(file) => file,
-        Err(err) => return Err(ConfigError::Io(err)),
-    };
-
-    let mut buffer = String::new();
-
-    if let Err(err) = file.read_to_string(&mut buffer) {
-        return Err(ConfigError::Io(err));
-    }
-
-    let value = match buffer.parse::<Value>() {
-        Ok(value) => value,
-        Err(_) => return Err(ConfigError::Format("Could not parse config as TOML".to_string())),
-    };
-
-    if !value["api-key"].is_str() {
-        return Err(ConfigError::Format("API key is not a string".to_string()));
-    }
-    if !value["api-secret"].is_str() {
-        return Err(ConfigError::Format("API secret is not a string".to_string()));
-    }
-
-    let key = value["api-key"].as_str().unwrap().to_string();
-    let secret = value["api-secret"].as_str().unwrap().to_string();
-
-    Ok(ApiKeys {
-        api_key: key,
-        api_secret: secret,
-    })
-}
+mod config;
 
 fn main() {
-    let api_keys = match get_api_keys() {
+    let api_keys = match config::load_config() {
         Ok(api_keys) => api_keys,
         Err(err) => {
-            println!("{}", err);
+            println!("Error while loading config: {}", err);
             process::exit(1);
         },
     };
