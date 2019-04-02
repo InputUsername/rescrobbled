@@ -1,7 +1,6 @@
 use std::fmt;
-use std::fs::File;
+use std::fs;
 use std::io;
-use std::io::prelude::*;
 use toml::Value;
 
 pub struct Config {
@@ -24,16 +23,10 @@ impl fmt::Display for ConfigError {
 }
 
 pub fn load_config() -> Result<Config, ConfigError> {
-    let mut file = match File::open("config.toml") {
-        Ok(file) => file,
+    let buffer = match fs::read_to_string("config.toml") {
+        Ok(content) => content,
         Err(err) => return Err(ConfigError::Io(err)),
     };
-
-    let mut buffer = String::new();
-
-    if let Err(err) = file.read_to_string(&mut buffer) {
-        return Err(ConfigError::Io(err));
-    }
 
     let value = match buffer.parse::<Value>() {
         Ok(value) => value,
