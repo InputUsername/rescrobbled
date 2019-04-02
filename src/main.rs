@@ -4,6 +4,7 @@ use rustfm_scrobble::{Scrobble, Scrobbler};
 use std::process;
 use std::fs;
 use std::io;
+use std::io::Write;
 
 mod config;
 
@@ -25,12 +26,18 @@ fn main() {
         scrobbler.authenticate_with_session_key(session_key);
     } else {
         let mut input = String::new();
+
+        print!("Username: ");
+        io::stdout().flush().unwrap();
         
         io::stdin().read_line(&mut input)
             .expect("Could not read username");
         let username = input.trim().to_owned();
 
         input.clear();
+
+        print!("Password: ");
+        io::stdout().flush().unwrap();
 
         io::stdin().read_line(&mut input)
             .expect("Could not read password");
