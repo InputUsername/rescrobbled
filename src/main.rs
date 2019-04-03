@@ -3,14 +3,10 @@ use rustfm_scrobble::{Scrobble, Scrobbler};
 
 use std::process;
 use std::thread;
-use std::fs;
-use std::io;
-use std::io::Write;
 use std::time::Duration;
 
 mod config;
-
-const SESSION_FILE: &str = ".session";
+mod auth;
 
 fn main() {
     let api_keys = match config::load_config() {
@@ -23,39 +19,9 @@ fn main() {
 
     let mut scrobbler = Scrobbler::new(api_keys.api_key, api_keys.api_secret);
 
-    if let Ok(session_key) = fs::read_to_string(SESSION_FILE) {
-        // TODO: validate session
-        scrobbler.authenticate_with_session_key(session_key);
-    } else {
-        let mut input = String::new();
-
-        print!("Username: ");
-        io::stdout().flush().unwrap();
-        
-        io::stdin().read_line(&mut input).unwrap();
-        input.pop();
-        let username = input.clone();
-
-        input.clear();
-
-        print!("Password: ");
-        io::stdout().flush().unwrap();
-
-        io::stdin().read_line(&mut input).unwrap();
-        input.pop();
-        let password = input.clone();
-
-        let session_response = match scrobbler.authenticate_with_password(username, password) {
-            Ok(res) => res,
-            Err(err) => {
-                eprintln!("Error authenticating with Last.fm: {}", err);
-                process::exit(1);
-            },
-        };
-
-        // We don't care whether storing the session works;
-        // it's simply convenient if it does
-        let _ = fs::write(SESSION_FILE, session_response.key);
+    match auth::authenticate(&mut scrobbler) {
+        Ok(_) => println!("Authenticated successfully!"),
+        Err(err) => println!("Failed to authenticate: {}", err),
     }
 
     let finder = match PlayerFinder::new() {
