@@ -34,7 +34,8 @@ fn main() {
         
         io::stdin().read_line(&mut input)
             .expect("Could not read username");
-        let username = input.trim().to_owned();
+        input.pop();
+        let username = input.clone();
 
         input.clear();
 
@@ -43,7 +44,8 @@ fn main() {
 
         io::stdin().read_line(&mut input)
             .expect("Could not read password");
-        let password = input.trim().to_owned();
+        input.pop();
+        let password = input.clone();
 
         let session_response = match scrobbler.authenticate_with_password(username, password) {
             Ok(res) => res,
@@ -100,8 +102,6 @@ fn main() {
                 process::exit(1);
             },
         };
-
-        // TODO: prevent reallocating every iteration
 
         let artist = meta.artists()
             .and_then(|artists| artists.first())
