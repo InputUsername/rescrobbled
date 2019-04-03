@@ -76,6 +76,8 @@ fn main() {
         }
     };
 
+    let mut previous_track = String::new();
+
     loop {
         thread::sleep(Duration::from_secs(1));
 
@@ -92,6 +94,7 @@ fn main() {
         };
 
         if status != PlaybackStatus::Playing {
+            previous_track.clear();
             continue;
         }
 
@@ -102,6 +105,21 @@ fn main() {
                 process::exit(1);
             },
         };
+
+        let track_id = meta.track_id();
+        
+        // Behavior will change in mpris-rs 2.0.0:
+        // track_id will be an Option, which will be None if no track found
+        if track_id.is_empty() {
+            continue;
+        }
+
+        if track_id == previous_track {
+            continue;
+        }
+
+        previous_track.clear();
+        previous_track.push_str(track_id);
 
         let artist = meta.artists()
             .and_then(|artists| artists.first())
