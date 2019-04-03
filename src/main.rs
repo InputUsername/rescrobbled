@@ -16,7 +16,7 @@ fn main() {
     let api_keys = match config::load_config() {
         Ok(api_keys) => api_keys,
         Err(err) => {
-            println!("Error while loading config: {}", err);
+            eprintln!("Error while loading config: {}", err);
             process::exit(1);
         },
     };
@@ -32,8 +32,7 @@ fn main() {
         print!("Username: ");
         io::stdout().flush().unwrap();
         
-        io::stdin().read_line(&mut input)
-            .expect("Could not read username");
+        io::stdin().read_line(&mut input).unwrap();
         input.pop();
         let username = input.clone();
 
@@ -42,15 +41,14 @@ fn main() {
         print!("Password: ");
         io::stdout().flush().unwrap();
 
-        io::stdin().read_line(&mut input)
-            .expect("Could not read password");
+        io::stdin().read_line(&mut input).unwrap();
         input.pop();
         let password = input.clone();
 
         let session_response = match scrobbler.authenticate_with_password(username, password) {
             Ok(res) => res,
             Err(err) => {
-                println!("Error authenticating with Last.fm: {}", err);
+                eprintln!("Error authenticating with Last.fm: {}", err);
                 process::exit(1);
             },
         };
@@ -63,7 +61,7 @@ fn main() {
     let finder = match PlayerFinder::new() {
         Ok(finder) => finder,
         Err(_) => {
-            println!("Could not connect to D-Bus");
+            eprintln!("Could not connect to D-Bus");
             process::exit(1);
         },
     };
@@ -71,7 +69,7 @@ fn main() {
     let player = match finder.find_active() {
         Ok(player) => player,
         Err(_) => {
-            println!("Could not find any active players");
+            eprintln!("Could not find any active players");
             process::exit(1);
         }
     };
@@ -88,7 +86,7 @@ fn main() {
         let status = match player.get_playback_status() {
             Ok(status) => status,
             Err(err) => {
-                println!("Error retrieving playback status: {}", err);
+                eprintln!("Error retrieving playback status: {}", err);
                 process::exit(1);
             },
         };
@@ -101,7 +99,7 @@ fn main() {
         let meta = match player.get_metadata() {
             Ok(meta) => meta,
             Err(err) => {
-                println!("Error retrieving track metadata: {}", err);
+                eprintln!("Error retrieving track metadata: {}", err);
                 process::exit(1);
             },
         };
@@ -134,13 +132,13 @@ fn main() {
             .map(|album| album.to_owned())
             .unwrap_or_else(|| String::new());
 
-        println!("Now playing: {} - {}\n{}", artist, title, album);
+        println!("Now playing: {} - {} ({})", artist, title, album);
         
         let scrobble = Scrobble::new(artist, title, album);
-        let np_result = scrobbler.now_playing(scrobble)
-            .unwrap();
-
-        println!("Scrobble result: {:#?}", np_result);
+        match scrobbler.now_playing(scrobble) {
+            Ok(_) => println!("Now playing status updated!"),
+            Err(err) => eprintln!("Error updating now playing status: {}", err),
+        }
 
         // TODO: scrobble as well in addition to now playing
     }
