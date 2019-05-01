@@ -1,4 +1,4 @@
-use mpris::{PlayerFinder, PlaybackStatus};
+use mpris::{PlayerFinder, PlaybackStatus, Player};
 use rustfm_scrobble::{Scrobble, Scrobbler};
 
 use std::process;
@@ -7,6 +7,12 @@ use std::time::Duration;
 
 mod config;
 mod auth;
+
+const INIT_WAIT_TIME: Duration = Duration::from_secs(1);
+const POLL_INTERVAL: Duration = Duration::from_millis(500);
+
+const MIN_LENGTH: Duration = Duration::from_secs(30);
+const MIN_PLAY_TIME: Duration = Duration::from_secs(4 * 60);
 
 fn main() {
     let api_keys = match config::load_config() {
@@ -20,92 +26,142 @@ fn main() {
     let mut scrobbler = Scrobbler::new(api_keys.api_key, api_keys.api_secret);
 
     match auth::authenticate(&mut scrobbler) {
-        Ok(_) => println!("Authenticated successfully!"),
-        Err(err) => println!("Failed to authenticate: {}", err),
+        Ok(_) => println!("Authenticated with Last.fm successfully!"),
+        Err(err) => {
+            eprintln!("Failed to authenticate with Last.fm: {}", err);
+            process::exit(1);
+        },
     }
 
     let finder = match PlayerFinder::new() {
         Ok(finder) => finder,
-        Err(_) => {
-            eprintln!("Could not connect to D-Bus");
+        Err(err) => {
+            eprintln!("Failed to connect to D-Bus: {}", err);
             process::exit(1);
         },
     };
 
-    let player = match finder.find_active() {
-        Ok(player) => player,
-        Err(_) => {
-            eprintln!("Could not find any active players");
-            process::exit(1);
-        }
-    };
+    println!("Looking for an active MPRIS player...");
 
-    let mut previous_track = String::new();
+    let mut player = wait_for_player(&finder);
+
+    println!("Found active player {}", player.identity());
+
+    let mut previous_artist = String::new();
+    let mut previous_title = String::new();
+    let mut previous_album = String::new();
+
+    let mut current_play_time = Duration::from_secs(0);
+    let mut scrobbled_current_song = false;
 
     loop {
-        thread::sleep(Duration::from_secs(1));
-
         if !player.is_running() {
-            break;
+            println!("Player {} stopped, looking for a new MPRIS player...", player.identity());
+
+            player = wait_for_player(&finder);
+
+            println!("Found active player {}", player.identity());
         }
 
-        let status = match player.get_playback_status() {
-            Ok(status) => status,
-            Err(err) => {
-                eprintln!("Error retrieving playback status: {}", err);
-                process::exit(1);
+        match player.get_playback_status() {
+            Ok(PlaybackStatus::Playing) => {},
+            Ok(_) => {
+                thread::sleep(POLL_INTERVAL);
+                continue;
             },
+            Err(err) => {
+                eprintln!("Failed to retrieve playback status: {}", err);
+
+                thread::sleep(POLL_INTERVAL);
+                continue;
+            },
+        }
+
+        let metadata = match player.get_metadata() {
+            Ok(metadata) => metadata,
+            Err(err) => {
+                eprintln!("Failed to get metadata: {}", err);
+
+                thread::sleep(POLL_INTERVAL);
+                continue;
+            }
         };
 
-        if status != PlaybackStatus::Playing {
-            previous_track.clear();
-            continue;
-        }
-
-        let meta = match player.get_metadata() {
-            Ok(meta) => meta,
-            Err(err) => {
-                eprintln!("Error retrieving track metadata: {}", err);
-                process::exit(1);
-            },
-        };
-
-        let track_id = meta.track_id();
-        
-        // Behavior will change in mpris-rs 2.0.0:
-        // track_id will be an Option, which will be None if no track found
-        if track_id.is_empty() {
-            continue;
-        }
-
-        if track_id == previous_track {
-            continue;
-        }
-
-        previous_track.clear();
-        previous_track.push_str(track_id);
-
-        let artist = meta.artists()
+        let artist = metadata.artists()
+            .as_ref()
             .and_then(|artists| artists.first())
-            .map(|artist| artist.clone())
+            .map(|&artist| artist.to_owned())
             .unwrap_or_else(|| String::new());
-        
-        let title = meta.title()
+
+        let title = metadata.title()
             .map(|title| title.to_owned())
             .unwrap_or_else(|| String::new());
 
-        let album = meta.album_name()
-            .map(|album| album.to_owned())
+        let album = metadata.album_name()
+            .map(|title| title.to_owned())
             .unwrap_or_else(|| String::new());
 
-        println!("Now playing: {} - {} ({})", artist, title, album);
-        
-        let scrobble = Scrobble::new(artist, title, album);
-        match scrobbler.now_playing(scrobble) {
-            Ok(_) => println!("Now playing status updated!"),
-            Err(err) => eprintln!("Error updating now playing status: {}", err),
+        if artist == previous_artist && title == previous_title && album == previous_album {
+            if !scrobbled_current_song {
+                let length = match metadata.length() {
+                    Some(length) => length,
+                    None => {
+                        eprintln!("Failed to get track length");
+
+                        thread::sleep(POLL_INTERVAL);
+                        continue;
+                    }
+                };
+
+                let min_play_time = if (length / 2) < MIN_PLAY_TIME {
+                    length / 2
+                } else {
+                    MIN_PLAY_TIME
+                };
+
+                if length > MIN_LENGTH && current_play_time > min_play_time {
+                    let scrobble = Scrobble::new(artist, title, album);
+
+                    match scrobbler.scrobble(scrobble) {
+                        Ok(_) => println!("Track scrobbled successfully"),
+                        Err(err) => eprintln!("Failed to scrobble song: {}", err),
+                    }
+
+                    scrobbled_current_song = true;
+                }
+
+                current_play_time += POLL_INTERVAL;
+            }
+        } else {
+            previous_artist.clone_from(&artist);
+            previous_title.clone_from(&title);
+            previous_album.clone_from(&album);
+
+            current_play_time = Duration::from_secs(0);
+            scrobbled_current_song = false;
+
+            println!("----");
+            println!("Now playing: {} - {} ({})", artist, title, album);
+
+            let scrobble = Scrobble::new(artist, title, album);
+
+            match scrobbler.now_playing(scrobble) {
+                Ok(_) => println!("Status updated successfully"),
+                Err(err) => eprintln!("Failed to update status: {}", err),
+            }
         }
 
-        // TODO: scrobble as well in addition to now playing
+        thread::sleep(POLL_INTERVAL);
+    }
+}
+
+fn wait_for_player(finder: &PlayerFinder) -> Player {
+    loop {
+        match finder.find_active() {
+            Ok(player) => return player,
+            Err(_) => {},
+        }
+
+        thread::sleep(INIT_WAIT_TIME);
     }
 }
