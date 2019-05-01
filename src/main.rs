@@ -61,6 +61,13 @@ fn main() {
             player = wait_for_player(&finder);
 
             println!("Found active player {}", player.identity());
+
+            previous_artist.clear();
+            previous_title.clear();
+            previous_album.clear();
+
+            current_play_time = Duration::from_secs(0);
+            scrobbled_current_song = false;
         }
 
         match player.get_playback_status() {
