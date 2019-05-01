@@ -5,6 +5,6 @@ authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-mpris = "1.1.2"
+mpris = "2.0.0-rc1"
 rustfm-scrobble = "0.9.2"
 toml = "0.5.0"
