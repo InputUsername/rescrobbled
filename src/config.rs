@@ -1,6 +1,7 @@
 use std::fmt;
 use std::fs;
 use std::io;
+use std::time::Duration;
 
 use serde::Deserialize;
 
@@ -9,6 +10,8 @@ use serde::Deserialize;
 pub struct Config {
     pub api_key: String,
     pub api_secret: String,
+
+    pub min_play_time: Option<Duration>,
 }
 
 pub enum ConfigError {

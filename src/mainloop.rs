@@ -5,11 +5,23 @@ use std::process;
 use std::thread;
 use std::time::Duration;
 
+use crate::config::Config;
+
 const INIT_WAIT_TIME: Duration = Duration::from_secs(1);
 const POLL_INTERVAL: Duration = Duration::from_millis(500);
 
 const MIN_LENGTH: Duration = Duration::from_secs(30);
 const MIN_PLAY_TIME: Duration = Duration::from_secs(4 * 60);
+
+fn get_min_play_time(track_length: Duration, config: &Config) -> Duration {
+    config.min_play_time.unwrap_or_else(|| {
+        if (track_length / 2) < MIN_PLAY_TIME {
+            track_length / 2
+        } else {
+            MIN_PLAY_TIME
+        }
+    })
+}
 
 fn wait_for_player(finder: &PlayerFinder) -> Player {
     loop {
@@ -22,7 +34,7 @@ fn wait_for_player(finder: &PlayerFinder) -> Player {
     }
 }
 
-pub fn run(scrobbler: &Scrobbler) {
+pub fn run(config: &Config, scrobbler: &Scrobbler) {
     let finder = match PlayerFinder::new() {
         Ok(finder) => finder,
         Err(err) => {
@@ -110,11 +122,7 @@ pub fn run(scrobbler: &Scrobbler) {
                     }
                 };
 
-                let min_play_time = if (length / 2) < MIN_PLAY_TIME {
-                    length / 2
-                } else {
-                    MIN_PLAY_TIME
-                };
+                let min_play_time = get_min_play_time(length, config);
 
                 if length > MIN_LENGTH && current_play_time > min_play_time {
                     let scrobble = Scrobble::new(artist, title, album);
