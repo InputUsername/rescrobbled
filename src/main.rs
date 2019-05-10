@@ -7,15 +7,15 @@ mod auth;
 mod mainloop;
 
 fn main() {
-    let api_keys = match config::load_config() {
-        Ok(api_keys) => api_keys,
+    let config = match config::load_config() {
+        Ok(config) => config,
         Err(err) => {
             eprintln!("Error while loading config: {}", err);
             process::exit(1);
         },
     };
 
-    let mut scrobbler = Scrobbler::new(api_keys.api_key, api_keys.api_secret);
+    let mut scrobbler = Scrobbler::new(config.api_key, config.api_secret);
 
     match auth::authenticate(&mut scrobbler) {
         Ok(_) => println!("Authenticated with Last.fm successfully!"),
