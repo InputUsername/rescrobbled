@@ -9,3 +9,4 @@ mpris = "2.0.0-rc1"
 rustfm-scrobble = "0.9.2"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.5.0"
+dirs = "2.0"
