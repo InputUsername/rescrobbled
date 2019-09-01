@@ -2,8 +2,8 @@ use rustfm_scrobble::Scrobbler;
 
 use std::process;
 
-mod config;
 mod auth;
+mod config;
 mod mainloop;
 
 fn main() {
@@ -12,7 +12,7 @@ fn main() {
         Err(err) => {
             eprintln!("Error while loading config: {}", err);
             process::exit(1);
-        },
+        }
     };
 
     let mut scrobbler = Scrobbler::new(config.api_key.clone(), config.api_secret.clone());
@@ -22,7 +22,7 @@ fn main() {
         Err(err) => {
             eprintln!("Failed to authenticate with Last.fm: {}", err);
             process::exit(1);
-        },
+        }
     }
 
     mainloop::run(&config, &scrobbler);
