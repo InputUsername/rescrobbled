@@ -1,3 +1,4 @@
+use dirs;
 use std::fmt;
 use std::fs;
 use std::io;
@@ -29,8 +30,11 @@ impl fmt::Display for ConfigError {
 }
 
 pub fn load_config() -> Result<Config, ConfigError> {
-    let buffer = fs::read_to_string("config.toml")
-        .map_err(|err| ConfigError::Io(err))?;
+    let mut path = dirs::config_dir().unwrap();
+    path.push("rescrobbled");
+    fs::create_dir_all(&path).expect("could not create config dir");
+    path.push("config.toml");
+    let buffer = fs::read_to_string(&path).map_err(|err| ConfigError::Io(err))?;
 
     toml::from_str(&buffer)
         .map_err(|err| ConfigError::Format(format!("Could not parse config: {}", err)))

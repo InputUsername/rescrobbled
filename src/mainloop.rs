@@ -1,5 +1,5 @@
-use rustfm_scrobble::{Scrobbler, Scrobble};
-use mpris::{PlayerFinder, Player, PlaybackStatus};
+use mpris::{PlaybackStatus, Player, PlayerFinder};
+use rustfm_scrobble::{Scrobble, Scrobbler};
 
 use std::process;
 use std::thread;
@@ -27,7 +27,7 @@ fn wait_for_player(finder: &PlayerFinder) -> Player {
     loop {
         match finder.find_active() {
             Ok(player) => return player,
-            Err(_) => {},
+            Err(_) => {}
         }
 
         thread::sleep(INIT_WAIT_TIME);
@@ -40,7 +40,7 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
         Err(err) => {
             eprintln!("Failed to connect to D-Bus: {}", err);
             process::exit(1);
-        },
+        }
     };
 
     println!("Looking for an active MPRIS player...");
@@ -58,7 +58,10 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
 
     loop {
         if !player.is_running() {
-            println!("Player {} stopped, looking for a new MPRIS player...", player.identity());
+            println!(
+                "Player {} stopped, looking for a new MPRIS player...",
+                player.identity()
+            );
 
             player = wait_for_player(&finder);
 
@@ -73,17 +76,17 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
         }
 
         match player.get_playback_status() {
-            Ok(PlaybackStatus::Playing) => {},
+            Ok(PlaybackStatus::Playing) => {}
             Ok(_) => {
                 thread::sleep(POLL_INTERVAL);
                 continue;
-            },
+            }
             Err(err) => {
                 eprintln!("Failed to retrieve playback status: {}", err);
 
                 thread::sleep(POLL_INTERVAL);
                 continue;
-            },
+            }
         }
 
         let metadata = match player.get_metadata() {
@@ -96,17 +99,20 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
             }
         };
 
-        let artist = metadata.artists()
+        let artist = metadata
+            .artists()
             .as_ref()
             .and_then(|artists| artists.first())
             .map(|&artist| artist.to_owned())
             .unwrap_or_else(|| String::new());
 
-        let title = metadata.title()
+        let title = metadata
+            .title()
             .map(|title| title.to_owned())
             .unwrap_or_else(|| String::new());
 
-        let album = metadata.album_name()
+        let album = metadata
+            .album_name()
             .map(|title| title.to_owned())
             .unwrap_or_else(|| String::new());
 

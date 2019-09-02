@@ -1,13 +1,18 @@
+use dirs;
 use std::fs;
 use std::io;
 use std::io::Write;
 
 use rustfm_scrobble::{Scrobbler, ScrobblerError};
 
-const SESSION_FILE: &str = ".session";
+const SESSION_FILE: &str = "session";
 
 pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<(), ScrobblerError> {
-    if let Ok(session_key) = fs::read_to_string(SESSION_FILE) {
+    let mut path = dirs::config_dir().unwrap();
+    path.push("rescrobbled");
+    path.push(SESSION_FILE);
+    let path = &path;
+    if let Ok(session_key) = fs::read_to_string(&path) {
         // TODO: validate session
         scrobbler.authenticate_with_session_key(session_key);
     } else {
@@ -15,7 +20,7 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<(), ScrobblerError> {
 
         print!("Username: ");
         io::stdout().flush().unwrap();
-        
+
         io::stdin().read_line(&mut input).unwrap();
         input.pop();
         let username = input.clone();
@@ -33,7 +38,7 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<(), ScrobblerError> {
 
         // We don't care whether storing the session works;
         // it's simply convenient if it does
-        let _ = fs::write(SESSION_FILE, session_response.key);
+        let _ = fs::write(path, session_response.key);
     }
 
     Ok(())
