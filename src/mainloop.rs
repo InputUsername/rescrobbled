@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-use listenbrainz_rust::Listen;
-=======
 // Copyright (C) 2019 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
@@ -16,7 +13,6 @@ use listenbrainz_rust::Listen;
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
->>>>>>> e09e2e64360e2c2940626cb27f5883295c43623b
 use mpris::{PlaybackStatus, Player, PlayerFinder};
 use rustfm_scrobble::{Scrobble, Scrobbler};
 
