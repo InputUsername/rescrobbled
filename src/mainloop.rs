@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use listenbrainz_rust::Listen;
 use mpris::{PlaybackStatus, Player, PlayerFinder};
 use rustfm_scrobble::{Scrobble, Scrobbler};
 
