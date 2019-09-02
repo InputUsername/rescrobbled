@@ -11,7 +11,7 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<(), ScrobblerError> {
     let mut path = dirs::config_dir().unwrap();
     path.push("rescrobbled");
     path.push(SESSION_FILE);
-    let path = path.into_os_string().into_string().unwrap();
+    let path = &path;
     if let Ok(session_key) = fs::read_to_string(&path) {
         // TODO: validate session
         scrobbler.authenticate_with_session_key(session_key);

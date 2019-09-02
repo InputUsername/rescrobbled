@@ -34,8 +34,7 @@ pub fn load_config() -> Result<Config, ConfigError> {
     path.push("rescrobbled");
     fs::create_dir_all(&path).expect("could not create config dir");
     path.push("config.toml");
-    let buffer = fs::read_to_string(path.into_os_string().into_string().unwrap())
-        .map_err(|err| ConfigError::Io(err))?;
+    let buffer = fs::read_to_string(&path).map_err(|err| ConfigError::Io(err))?;
 
     toml::from_str(&buffer)
         .map_err(|err| ConfigError::Format(format!("Could not parse config: {}", err)))
