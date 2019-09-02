@@ -11,6 +11,9 @@ fn main() {
         Ok(config) => config,
         Err(err) => {
             eprintln!("Error while loading config: {}", err);
+            eprintln!("\t$HOME/.config/rescrobbled/config.toml must be formatted as follows:");
+            eprintln!("\tapi-key = \"apikeystring\"");
+            eprintln!("\tapi-secret = \"apisecretstring\"");
             process::exit(1);
         }
     };
