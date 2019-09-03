@@ -17,6 +17,7 @@ use listenbrainz_rust::Listen;
 use mpris::{PlaybackStatus, Player, PlayerFinder};
 use rustfm_scrobble::{Scrobble, Scrobbler};
 
+use notify_rust::{Notification, Timeout};
 use std::process;
 use std::thread;
 use std::time::Duration;
@@ -182,6 +183,14 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
             println!("----");
             println!("Now playing: {} - {} ({})", artist, title, album);
 
+            if config.enable_notifications.unwrap_or_default() {
+                Notification::new()
+                    .summary(&title)
+                    .body(&format!("{} - {}", &artist, &album))
+                    .timeout(Timeout::Milliseconds(6000)) //milliseconds
+                    .show()
+                    .unwrap();
+            }
             let scrobble = Scrobble::new(artist.clone(), title.clone(), album.clone());
 
             match scrobbler.now_playing(scrobble) {
