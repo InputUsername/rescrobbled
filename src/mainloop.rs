@@ -150,18 +150,20 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                     let scrobble = Scrobble::new(artist.clone(), title.clone(), album.clone());
 
                     match scrobbler.scrobble(scrobble) {
-                        Ok(_) => println!("Track scrobbled successfully"),
-                        Err(err) => eprintln!("Failed to scrobble song: {}", err),
+                        Ok(_) => println!("Track submitted to Last.fm successfully"),
+                        Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
                     }
-                    if config.lb_token != "" {
+                    if config.lb_token.clone().unwrap_or_default() != "" {
                         let listen = Listen {
                             artist: &artist[..],
                             track: &title[..],
                             album: &album[..],
                         };
-                        match listen.single(&config.lb_token[..]) {
-                            Ok(_) => println!("Track listened successfully"),
-                            Err(err) => eprintln!("Failed to listen song: {}", err),
+                        match listen.single(&config.lb_token.clone().unwrap_or_default()) {
+                            Ok(_) => println!("Track submitted to ListenBrainz successfully"),
+                            Err(err) => {
+                                eprintln!("Failed to submit track to ListenBrainz: {}", err)
+                            }
                         }
                     }
                     scrobbled_current_song = true;
@@ -183,18 +185,18 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
             let scrobble = Scrobble::new(artist.clone(), title.clone(), album.clone());
 
             match scrobbler.now_playing(scrobble) {
-                Ok(_) => println!("Status updated successfully"),
-                Err(err) => eprintln!("Failed to update status: {}", err),
+                Ok(_) => println!("Status updated on Last.fm successfully"),
+                Err(err) => eprintln!("Failed to update status on Last.fm: {}", err),
             }
-            if config.lb_token != "" {
+            if config.lb_token.clone().unwrap_or_default() != "" {
                 let listen = Listen {
                     artist: &artist[..],
                     track: &title[..],
                     album: &album[..],
                 };
-                match listen.playing_now(&config.lb_token[..]) {
-                    Ok(_) => println!("Status listened successfully"),
-                    Err(err) => eprintln!("Failed to listen song: {}", err),
+                match listen.playing_now(&config.lb_token.clone().unwrap_or_default()) {
+                    Ok(_) => println!("Status updated on ListenBrainz successfully"),
+                    Err(err) => eprintln!("Failed to update status on ListenBrainz: {}", err),
                 }
             }
         }
