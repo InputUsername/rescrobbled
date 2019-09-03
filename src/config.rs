@@ -27,6 +27,7 @@ pub struct Config {
     pub api_key: String,
     pub api_secret: String,
     pub lb_token: String,
+    pub enable_notifications: bool,
 
     pub min_play_time: Option<Duration>,
 }

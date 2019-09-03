@@ -31,6 +31,8 @@ fn main() {
             eprintln!("\t$HOME/.config/rescrobbled/config.toml must be formatted as follows:");
             eprintln!("\tapi-key = \"apikeystring\"");
             eprintln!("\tapi-secret = \"apisecretstring\"");
+            eprintln!("\tlb-token = \"tokenuuid\"");
+            eprintln!("\tenable-notifications = true");
             process::exit(1);
         }
     };
