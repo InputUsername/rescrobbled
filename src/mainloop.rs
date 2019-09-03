@@ -153,13 +153,13 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                         Ok(_) => println!("Track submitted to Last.fm successfully"),
                         Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
                     }
-                    if config.lb_token.clone().unwrap_or_default() != "" {
+                    if let Some(ref token) = config.lb_token {
                         let listen = Listen {
                             artist: &artist[..],
                             track: &title[..],
                             album: &album[..],
                         };
-                        match listen.single(&config.lb_token.clone().unwrap_or_default()) {
+                        match listen.single(token) {
                             Ok(_) => println!("Track submitted to ListenBrainz successfully"),
                             Err(err) => {
                                 eprintln!("Failed to submit track to ListenBrainz: {}", err)
@@ -188,13 +188,13 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                 Ok(_) => println!("Status updated on Last.fm successfully"),
                 Err(err) => eprintln!("Failed to update status on Last.fm: {}", err),
             }
-            if config.lb_token.clone().unwrap_or_default() != "" {
+            if let Some(ref token) = config.lb_token {
                 let listen = Listen {
                     artist: &artist[..],
                     track: &title[..],
                     album: &album[..],
                 };
-                match listen.playing_now(&config.lb_token.clone().unwrap_or_default()) {
+                match listen.playing_now(token) {
                     Ok(_) => println!("Status updated on ListenBrainz successfully"),
                     Err(err) => eprintln!("Failed to update status on ListenBrainz: {}", err),
                 }
