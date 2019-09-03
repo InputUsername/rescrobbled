@@ -154,13 +154,13 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                         Ok(_) => println!("Track scrobbled successfully"),
                         Err(err) => eprintln!("Failed to scrobble song: {}", err),
                     }
-                    if config.lb_token != "" {
+                    if config.lb_token.clone().unwrap_or_default() != "" {
                         let listen = Listen {
                             artist: &artist[..],
                             track: &title[..],
                             album: &album[..],
                         };
-                        match listen.single(&config.lb_token[..]) {
+                        match listen.single(&config.lb_token.clone().unwrap_or_default()) {
                             Ok(_) => println!("Track listened successfully"),
                             Err(err) => eprintln!("Failed to listen song: {}", err),
                         }
@@ -181,7 +181,7 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
             println!("----");
             println!("Now playing: {} - {} ({})", artist, title, album);
 
-            if config.enable_notifications {
+            if config.enable_notifications.unwrap_or_default() {
                 Notification::new()
                     .summary(&title)
                     .body(&format!("{} - {}", &artist, &album))
@@ -195,13 +195,13 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                 Ok(_) => println!("Status updated successfully"),
                 Err(err) => eprintln!("Failed to update status: {}", err),
             }
-            if config.lb_token != "" {
+            if config.lb_token.clone().unwrap_or_default() != "" {
                 let listen = Listen {
                     artist: &artist[..],
                     track: &title[..],
                     album: &album[..],
                 };
-                match listen.playing_now(&config.lb_token[..]) {
+                match listen.playing_now(&config.lb_token.clone().unwrap_or_default()) {
                     Ok(_) => println!("Status listened successfully"),
                     Err(err) => eprintln!("Failed to listen song: {}", err),
                 }
