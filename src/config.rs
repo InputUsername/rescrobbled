@@ -26,6 +26,7 @@ use serde::Deserialize;
 pub struct Config {
     pub api_key: String,
     pub api_secret: String,
+    pub lb_token: Option<String>,
 
     pub min_play_time: Option<Duration>,
 }
