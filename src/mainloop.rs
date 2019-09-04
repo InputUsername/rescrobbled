@@ -40,11 +40,31 @@ fn get_min_play_time(track_length: Duration, config: &Config) -> Duration {
     })
 }
 
+fn player_is_active(player: &Player) -> bool {
+    if !player.is_running() {
+        return false;
+    }
+
+    match player.get_playback_status() {
+        Ok(PlaybackStatus::Playing) => true,
+        _ => false
+    }
+}
+
 fn wait_for_player(finder: &PlayerFinder) -> Player {
     loop {
-        match finder.find_active() {
-            Ok(player) => return player,
-            Err(_) => {}
+        let players = match finder.find_all() {
+            Ok(players) => players,
+            _ => {
+                thread::sleep(INIT_WAIT_TIME);
+                continue;
+            }
+        };
+
+        for player in players {
+            if player_is_active(&player) {
+                return player;
+            }
         }
 
         thread::sleep(INIT_WAIT_TIME);
@@ -74,7 +94,7 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
     let mut scrobbled_current_song = false;
 
     loop {
-        if !player.is_running() {
+        if !player_is_active(&player) {
             println!(
                 "Player {} stopped, looking for a new MPRIS player...",
                 player.identity()
