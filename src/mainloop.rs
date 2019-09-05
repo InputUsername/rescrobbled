@@ -154,17 +154,17 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
             .unwrap_or_else(|| String::new());
 
         if artist == previous_artist && title == previous_title && album == previous_album {
+            let length = match metadata.length() {
+                Some(length) => length,
+                None => {
+                    eprintln!("Failed to get track length");
+
+                    thread::sleep(POLL_INTERVAL);
+                    continue;
+                }
+            };
+
             if !scrobbled_current_song {
-                let length = match metadata.length() {
-                    Some(length) => length,
-                    None => {
-                        eprintln!("Failed to get track length");
-
-                        thread::sleep(POLL_INTERVAL);
-                        continue;
-                    }
-                };
-
                 let min_play_time = get_min_play_time(length, config);
 
                 if length > MIN_LENGTH && current_play_time > min_play_time {
@@ -191,6 +191,11 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                 }
 
                 current_play_time += POLL_INTERVAL;
+            }
+            
+            if current_play_time > length {
+                current_play_time = Duration::from_secs(0);
+                scrobbled_current_song = false;
             }
         } else {
             previous_artist.clone_from(&artist);
