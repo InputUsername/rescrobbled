@@ -47,7 +47,7 @@ fn player_is_active(player: &Player) -> bool {
 
     match player.get_playback_status() {
         Ok(PlaybackStatus::Playing) => true,
-        _ => false
+        _ => false,
     }
 }
 
@@ -174,12 +174,14 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                         Ok(_) => println!("Track submitted to Last.fm successfully"),
                         Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
                     }
+
                     if let Some(ref token) = config.lb_token {
                         let listen = Listen {
                             artist: &artist[..],
                             track: &title[..],
                             album: &album[..],
                         };
+
                         match listen.single(token) {
                             Ok(_) => println!("Track submitted to ListenBrainz successfully"),
                             Err(err) => {
@@ -187,12 +189,13 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                             }
                         }
                     }
+
                     scrobbled_current_song = true;
                 }
 
                 current_play_time += POLL_INTERVAL;
             }
-            
+
             if current_play_time > length {
                 current_play_time = Duration::from_secs(0);
                 scrobbled_current_song = false;
@@ -216,18 +219,21 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                     .show()
                     .unwrap();
             }
+
             let scrobble = Scrobble::new(artist.clone(), title.clone(), album.clone());
 
             match scrobbler.now_playing(scrobble) {
                 Ok(_) => println!("Status updated on Last.fm successfully"),
                 Err(err) => eprintln!("Failed to update status on Last.fm: {}", err),
             }
+
             if let Some(ref token) = config.lb_token {
                 let listen = Listen {
                     artist: &artist[..],
                     track: &title[..],
                     album: &album[..],
                 };
+
                 match listen.playing_now(token) {
                     Ok(_) => println!("Status updated on ListenBrainz successfully"),
                     Err(err) => eprintln!("Failed to update status on ListenBrainz: {}", err),
