@@ -14,13 +14,13 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use listenbrainz_rust::Listen;
-use mpris::{PlaybackStatus, Player, PlayerFinder};
+use mpris::{Metadata, PlaybackStatus, Player, PlayerFinder};
 use rustfm_scrobble::{Scrobble, Scrobbler};
 
 use notify_rust::{Notification, Timeout};
 use std::process;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::config::Config;
 
@@ -46,8 +46,8 @@ fn player_is_active(player: &Player) -> bool {
     }
 
     match player.get_playback_status() {
-        Ok(PlaybackStatus::Playing) => true,
-        _ => false,
+        Ok(_) => true,
+        Err(_) => false,
     }
 }
 
@@ -86,13 +86,11 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
 
     println!("Found active player {}", player.identity());
 
-    let mut previous_artist = String::new();
-    let mut previous_title = String::new();
-    let mut previous_album = String::new();
-
     let mut current_play_time = Duration::from_secs(0);
     let mut scrobbled_current_song = false;
+    let mut now_playing = false;
 
+    let mut instant = Instant::now();
     loop {
         if !player_is_active(&player) {
             println!(
@@ -104,23 +102,25 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
 
             println!("Found active player {}", player.identity());
 
-            previous_artist.clear();
-            previous_title.clear();
-            previous_album.clear();
-
-            current_play_time = Duration::from_secs(0);
             scrobbled_current_song = false;
+            current_play_time = Duration::from_secs(0);
         }
 
         match player.get_playback_status() {
-            Ok(PlaybackStatus::Playing) => {}
+            Ok(PlaybackStatus::Playing) => {
+                current_play_time = current_play_time + instant.elapsed();
+                //println!("Playing for {} seconds", current_play_time.as_secs());
+            }
             Ok(_) => {
+                now_playing = false;
+                instant = Instant::now();
                 thread::sleep(POLL_INTERVAL);
                 continue;
             }
             Err(err) => {
                 eprintln!("Failed to retrieve playback status: {}", err);
-
+                now_playing = false;
+                instant = Instant::now();
                 thread::sleep(POLL_INTERVAL);
                 continue;
             }
@@ -136,91 +136,62 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
             }
         };
 
-        let artist = metadata
-            .artists()
-            .as_ref()
-            .and_then(|artists| artists.first())
-            .map(|&artist| artist.to_owned())
-            .unwrap_or_else(|| String::new());
+        let (artist_old, title_old, album_old) = fill_metadata(&metadata);
 
-        let title = metadata
-            .title()
-            .map(|title| title.to_owned())
-            .unwrap_or_else(|| String::new());
+        let length = match metadata.length() {
+            Some(length) => length,
+            None => {
+                eprintln!("Failed to get track length");
 
-        let album = metadata
-            .album_name()
-            .map(|title| title.to_owned())
-            .unwrap_or_else(|| String::new());
+                thread::sleep(POLL_INTERVAL);
+                continue;
+            }
+        };
 
-        if artist == previous_artist && title == previous_title && album == previous_album {
-            let length = match metadata.length() {
-                Some(length) => length,
-                None => {
-                    eprintln!("Failed to get track length");
+        if !scrobbled_current_song {
+            let min_play_time = get_min_play_time(length, config);
 
-                    thread::sleep(POLL_INTERVAL);
-                    continue;
-                }
-            };
+            if length > MIN_LENGTH && current_play_time > min_play_time {
+                let scrobble =
+                    Scrobble::new(artist_old.clone(), title_old.clone(), album_old.clone());
 
-            if !scrobbled_current_song {
-                let min_play_time = get_min_play_time(length, config);
-
-                if length > MIN_LENGTH && current_play_time > min_play_time {
-                    let scrobble = Scrobble::new(artist.clone(), title.clone(), album.clone());
-
-                    match scrobbler.scrobble(scrobble) {
-                        Ok(_) => println!("Track submitted to Last.fm successfully"),
-                        Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
-                    }
-
-                    if let Some(ref token) = config.lb_token {
-                        let listen = Listen {
-                            artist: &artist[..],
-                            track: &title[..],
-                            album: &album[..],
-                        };
-
-                        match listen.single(token) {
-                            Ok(_) => println!("Track submitted to ListenBrainz successfully"),
-                            Err(err) => {
-                                eprintln!("Failed to submit track to ListenBrainz: {}", err)
-                            }
-                        }
-                    }
-
-                    scrobbled_current_song = true;
+                match scrobbler.scrobble(scrobble) {
+                    Ok(_) => println!("Track submitted to Last.fm successfully"),
+                    Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
                 }
 
-                current_play_time += POLL_INTERVAL;
+                if let Some(ref token) = config.lb_token {
+                    let listen = Listen {
+                        artist: &artist_old[..],
+                        track: &title_old[..],
+                        album: &album_old[..],
+                    };
+
+                    match listen.single(token) {
+                        Ok(_) => println!("Track submitted to ListenBrainz successfully"),
+                        Err(err) => eprintln!("Failed to submit track to ListenBrainz: {}", err),
+                    }
+                }
+                scrobbled_current_song = true;
             }
-
-            if current_play_time > length {
-                current_play_time = Duration::from_secs(0);
-                scrobbled_current_song = false;
-            }
-        } else {
-            previous_artist.clone_from(&artist);
-            previous_title.clone_from(&title);
-            previous_album.clone_from(&album);
-
-            current_play_time = Duration::from_secs(0);
-            scrobbled_current_song = false;
-
+        }
+        if !now_playing {
             println!("----");
-            println!("Now playing: {} - {} ({})", artist, title, album);
+            println!(
+                "Now playing: {} - {} ({})",
+                artist_old, title_old, album_old
+            );
 
             if config.enable_notifications.unwrap_or_default() {
                 Notification::new()
-                    .summary(&title)
-                    .body(&format!("{} - {}", &artist, &album))
+                    .summary(&title_old)
+                    .body(&format!("{} - {}", &artist_old, &album_old))
                     .timeout(Timeout::Milliseconds(6000)) //milliseconds
                     .show()
                     .unwrap();
             }
 
-            let scrobble = Scrobble::new(artist.clone(), title.clone(), album.clone());
+            let scrobble = Scrobble::new(artist_old.clone(), title_old.clone(), album_old.clone());
 
             match scrobbler.now_playing(scrobble) {
                 Ok(_) => println!("Status updated on Last.fm successfully"),
@@ -229,9 +200,9 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
 
             if let Some(ref token) = config.lb_token {
                 let listen = Listen {
-                    artist: &artist[..],
-                    track: &title[..],
-                    album: &album[..],
+                    artist: &artist_old[..],
+                    track: &title_old[..],
+                    album: &album_old[..],
                 };
 
                 match listen.playing_now(token) {
@@ -239,8 +210,50 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                     Err(err) => eprintln!("Failed to update status on ListenBrainz: {}", err),
                 }
             }
+            now_playing = true;
         }
 
+        instant = Instant::now();
         thread::sleep(POLL_INTERVAL);
+
+        let metadata = match player.get_metadata() {
+            Ok(metadata) => metadata,
+            Err(err) => {
+                eprintln!("Failed to get metadata: {}", err);
+
+                thread::sleep(POLL_INTERVAL);
+                continue;
+            }
+        };
+        let (artist_new, title_new, album_new) = fill_metadata(&metadata);
+        if current_play_time >= length
+            || artist_old != artist_new
+            || title_old != title_new
+            || album_old != album_new
+        {
+            scrobbled_current_song = false;
+            now_playing = false;
+            current_play_time = Duration::from_secs(0);
+        }
     }
+}
+
+fn fill_metadata(md: &Metadata) -> (String, String, String) {
+    let artist = md
+        .artists()
+        .as_ref()
+        .and_then(|artists| artists.first())
+        .map(|&artist| artist.to_owned())
+        .unwrap_or_else(|| String::new());
+
+    let title = md
+        .title()
+        .map(|title| title.to_owned())
+        .unwrap_or_else(|| String::new());
+
+    let album = md
+        .album_name()
+        .map(|title| title.to_owned())
+        .unwrap_or_else(|| String::new());
+    return (artist, title, album);
 }
