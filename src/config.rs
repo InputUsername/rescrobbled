@@ -19,7 +19,11 @@ use std::fs;
 use std::io;
 use std::time::Duration;
 
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
+
+fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(de: D) -> Result<Option<Duration>, D::Error> {
+    Ok(Some(Duration::from_secs(u64::deserialize(de)?)))
+}
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
@@ -29,6 +33,7 @@ pub struct Config {
     pub lb_token: Option<String>,
     pub enable_notifications: Option<bool>,
 
+    #[serde(default, deserialize_with = "deserialize_duration_seconds")]
     pub min_play_time: Option<Duration>,
 }
 
