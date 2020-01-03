@@ -8,6 +8,8 @@ You can download one of the prebuilt binaries [here](https://github.com/InputUse
 
 Alternatively you can install from source using `cargo install --path .` from the crate root.
 
+There is also an [Arch Linux AUR package](https://aur.archlinux.org/packages/rescrobbled-git/) by [brycied00d](https://github.com/brycied00d). (I do not maintain this so I cannot provide support for it.)
+
 To use rescrobbled, you'll need a Last.fm API key and secret. These can be obtained [here](https://www.last.fm/api/account/create).
 
 ## Configuration
