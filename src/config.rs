@@ -17,6 +17,7 @@ use std::fmt;
 use std::fs;
 use std::io;
 use std::time::Duration;
+use std::collections::HashSet;
 
 use dirs;
 
@@ -42,6 +43,8 @@ pub struct Config {
 
     #[serde(default, deserialize_with = "deserialize_duration_seconds")]
     pub min_play_time: Option<Duration>,
+
+    pub player_whitelist: Option<HashSet<String>>,
 }
 
 pub enum ConfigError {
