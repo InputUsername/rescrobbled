@@ -16,9 +16,9 @@ To use rescrobbled, you'll need a Last.fm API key and secret. These can be obtai
 
 Rescrobbled expects a configuration file at `~/.config/rescrobbled/config.toml` with the following format:
 ```toml
-api-key = "Last.fm API key"
-api-secret = "Last.fm API secret"
-lb-token = "ListenBrainz API token" # optional
+lastfm-key = "Last.fm API key"
+lastfm-secret = "Last.fm API secret"
+listenbrainz-token = "ListenBrainz API token" # optional
 enable-notifications = false # optional
 min-play-time = 0 # optional; in seconds
 ```

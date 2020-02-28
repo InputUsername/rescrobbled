@@ -29,9 +29,15 @@ fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(de: D) -> Result<Opti
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
-    pub api_key: String,
-    pub api_secret: String,
-    pub lb_token: Option<String>,
+    #[serde(alias = "api-key")]
+    pub lastfm_key: String,
+
+    #[serde(alias = "api-secret")]
+    pub lastfm_secret: String,
+
+    #[serde(alias = "lb-token")]
+    pub listenbrainz_token: Option<String>,
+
     pub enable_notifications: Option<bool>,
 
     #[serde(default, deserialize_with = "deserialize_duration_seconds")]
