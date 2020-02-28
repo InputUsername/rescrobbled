@@ -16,12 +16,17 @@ To use rescrobbled, you'll need a Last.fm API key and secret. These can be obtai
 
 Rescrobbled expects a configuration file at `~/.config/rescrobbled/config.toml` with the following format:
 ```toml
+# required
+
 lastfm-key = "Last.fm API key"
 lastfm-secret = "Last.fm API secret"
-listenbrainz-token = "ListenBrainz API token" # optional
-enable-notifications = false # optional
-min-play-time = 0 # optional; in seconds
-player-whitelist = [ "Player MPRIS identity" ] # optional; if empty or ommitted, will allow all players
+
+# optional
+
+listenbrainz-token = "ListenBrainz API token"
+enable-notifications = false
+min-play-time = 0 # in seconds
+player-whitelist = [ "Player MPRIS identity" ] # if empty or ommitted, will allow all players
 ```
 By default, track submission respects Last.fm's recommended behavior; songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using `min-play-time` you can override this.
 
