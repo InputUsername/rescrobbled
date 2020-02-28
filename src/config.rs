@@ -13,22 +13,34 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use dirs;
 use std::fmt;
 use std::fs;
 use std::io;
 use std::time::Duration;
 
-use serde::Deserialize;
+use dirs;
+
+use serde::{Deserialize, Deserializer};
+
+fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(de: D) -> Result<Option<Duration>, D::Error> {
+    Ok(Some(Duration::from_secs(u64::deserialize(de)?)))
+}
 
 #[derive(Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
-    pub api_key: String,
-    pub api_secret: String,
-    pub lb_token: Option<String>,
+    #[serde(alias = "api-key")]
+    pub lastfm_key: String,
+
+    #[serde(alias = "api-secret")]
+    pub lastfm_secret: String,
+
+    #[serde(alias = "lb-token")]
+    pub listenbrainz_token: Option<String>,
+
     pub enable_notifications: Option<bool>,
 
+    #[serde(default, deserialize_with = "deserialize_duration_seconds")]
     pub min_play_time: Option<Duration>,
 }
 
@@ -47,11 +59,18 @@ impl fmt::Display for ConfigError {
 }
 
 pub fn load_config() -> Result<Config, ConfigError> {
-    let mut path = dirs::config_dir().unwrap();
+    let mut path = dirs::config_dir()
+        .ok_or(ConfigError::Io(io::Error::new(io::ErrorKind::NotFound, "User config directory not found")))?;
+
     path.push("rescrobbled");
-    fs::create_dir_all(&path).expect("could not create config dir");
+
+    fs::create_dir_all(&path)
+        .map_err(|err| ConfigError::Io(err))?;
+
     path.push("config.toml");
-    let buffer = fs::read_to_string(&path).map_err(|err| ConfigError::Io(err))?;
+
+    let buffer = fs::read_to_string(&path)
+        .map_err(|err| ConfigError::Io(err))?;
 
     toml::from_str(&buffer)
         .map_err(|err| ConfigError::Format(format!("Could not parse config: {}", err)))

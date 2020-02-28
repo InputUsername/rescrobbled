@@ -174,7 +174,7 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                         Ok(_) => println!("Track submitted to Last.fm successfully"),
                         Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
                     }
-                    if let Some(ref token) = config.lb_token {
+                    if let Some(ref token) = config.listenbrainz_token {
                         let listen = Listen {
                             artist: &artist[..],
                             track: &title[..],
@@ -203,7 +203,7 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
             println!("----");
             println!("Now playing: {} - {} ({})", artist, title, album);
 
-            if config.enable_notifications.unwrap_or_default() {
+            if config.enable_notifications.unwrap_or(false) {
                 Notification::new()
                     .summary(&title)
                     .body(&format!("{} - {}", &artist, &album))
@@ -211,13 +211,15 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                     .show()
                     .unwrap();
             }
+
             let scrobble = Scrobble::new(artist.clone(), title.clone(), album.clone());
 
             match scrobbler.now_playing(scrobble) {
                 Ok(_) => println!("Status updated on Last.fm successfully"),
                 Err(err) => eprintln!("Failed to update status on Last.fm: {}", err),
             }
-            if let Some(ref token) = config.lb_token {
+
+            if let Some(ref token) = config.listenbrainz_token {
                 let listen = Listen {
                     artist: &artist[..],
                     track: &title[..],
