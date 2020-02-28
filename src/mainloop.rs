@@ -51,7 +51,16 @@ fn player_is_active(player: &Player) -> bool {
     }
 }
 
-fn wait_for_player(finder: &PlayerFinder) -> Player {
+fn player_is_whitelisted(config: &Config, player: &Player) -> bool {
+    if let Some(ref whitelist) = config.player_whitelist {
+        if !whitelist.is_empty() {
+            return whitelist.contains(player.identity());
+        }
+    }
+    true
+}
+
+fn wait_for_player<'f>(config: &Config, finder: &'f PlayerFinder) -> Player<'f> {
     loop {
         let players = match finder.find_all() {
             Ok(players) => players,
@@ -62,7 +71,7 @@ fn wait_for_player(finder: &PlayerFinder) -> Player {
         };
 
         for player in players {
-            if player_is_active(&player) {
+            if player_is_active(&player) && player_is_whitelisted(config, &player) {
                 return player;
             }
         }
@@ -82,7 +91,7 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
 
     println!("Looking for an active MPRIS player...");
 
-    let mut player = wait_for_player(&finder);
+    let mut player = wait_for_player(config, &finder);
 
     println!("Found active player {}", player.identity());
 
@@ -100,7 +109,7 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                 player.identity()
             );
 
-            player = wait_for_player(&finder);
+            player = wait_for_player(config, &finder);
 
             println!("Found active player {}", player.identity());
 

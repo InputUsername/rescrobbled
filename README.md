@@ -21,6 +21,7 @@ lastfm-secret = "Last.fm API secret"
 listenbrainz-token = "ListenBrainz API token" # optional
 enable-notifications = false # optional
 min-play-time = 0 # optional; in seconds
+player-whitelist = [ "Player MPRIS identity" ] # optional; if empty or ommitted, will allow all players
 ```
 By default, track submission respects Last.fm's recommended behavior; songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using `min-play-time` you can override this.
 
