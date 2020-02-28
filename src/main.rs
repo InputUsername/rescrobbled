@@ -15,9 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use rustfm_scrobble::Scrobbler;
-
 use std::process;
+
+use rustfm_scrobble::Scrobbler;
 
 mod auth;
 mod config;
@@ -28,11 +28,6 @@ fn main() {
         Ok(config) => config,
         Err(err) => {
             eprintln!("Error while loading config: {}", err);
-            eprintln!("\t$HOME/.config/rescrobbled/config.toml must be formatted as follows:");
-            eprintln!("\tapi-key = \"apikeystring\"");
-            eprintln!("\tapi-secret = \"apisecretstring\"");
-            eprintln!("\tlb-token = \"tokenuuid\"");
-            eprintln!("\tenable-notifications = true");
             process::exit(1);
         }
     };
