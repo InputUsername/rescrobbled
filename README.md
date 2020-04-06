@@ -2,7 +2,7 @@
 
 Rescrobbled is a music scrobbler daemon written in Rust. Among other things, due to sharing a Spotify account (I know, I know), I needed a way to scrobble to [Last.fm](https://last.fm) without connecting the Spotify account to my Last.fm account. Rescrobbled detects active media players running on D-Bus using `MPRIS`, automatically updates "now playing" status, and scrobbles songs as they play. [ListenBrainz](https://listenbrainz.org) is also (optionally) supported.
 
-# How to install and use
+## How to install and use
 
 You can download one of the prebuilt binaries [here](https://github.com/InputUsername/rescrobbled/releases). The binary can be placed anywhere you like.
 
@@ -12,7 +12,7 @@ There is also an [Arch Linux AUR package](https://aur.archlinux.org/packages/res
 
 To use rescrobbled, you'll need a Last.fm API key and secret. These can be obtained [here](https://www.last.fm/api/account/create).
 
-## Configuration
+### Configuration
 
 Rescrobbled expects a configuration file at `~/.config/rescrobbled/config.toml` with the following format:
 ```toml
@@ -30,7 +30,7 @@ player-whitelist = [ "Player MPRIS identity" ] # if empty or ommitted, will allo
 ```
 By default, track submission respects Last.fm's recommended behavior; songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using `min-play-time` you can override this.
 
-## Running rescrobbled
+### Running rescrobbled
 
 To make sure that rescrobbled can scrobble to Last.fm, you need to run the program in a terminal. This will prompt you for your Last.fm username and password, and authenticate with Last.fm. A long-lasting session token is then obtained, which will be used on subsequent runs instead of your username/password.
 
@@ -43,3 +43,13 @@ You can run it in the current session using:
 ```
 systemctl --user start rescrobbled.service
 ```
+
+## Project resources
+
+- [Issues](https://github.com/InputUsername/rescrobbled/issues)
+- [Changelog](https://github.com/InputUsername/rescrobbled/blob/master/CHANGELOG.md)
+- [Releases](https://github.com/InputUsername/rescrobbled/releases)
+
+## License
+
+GPL-3.0, see [`LICENSE`](https://github.com/InputUsername/rescrobbled/blob/master/LICENSE).
