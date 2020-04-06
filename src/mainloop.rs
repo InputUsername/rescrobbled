@@ -30,6 +30,8 @@ const POLL_INTERVAL: Duration = Duration::from_millis(500);
 const MIN_LENGTH: Duration = Duration::from_secs(30);
 const MIN_PLAY_TIME: Duration = Duration::from_secs(4 * 60);
 
+const BUS_NAME_PREFIX: &str = "org.mpris.MediaPlayer2.";
+
 fn get_min_play_time(track_length: Duration, config: &Config) -> Duration {
     config.min_play_time.unwrap_or_else(|| {
         if (track_length / 2) < MIN_PLAY_TIME {
@@ -51,10 +53,22 @@ fn player_is_active(player: &Player) -> bool {
     }
 }
 
+fn get_player_bus_name<'p>(player: &'p Player) -> &'p str {
+    player.bus_name()
+        .as_cstr()
+        .to_str()
+        .unwrap_or("")
+        .trim_start_matches(BUS_NAME_PREFIX)
+        .split('.') // Remove the instance part of the unique name
+        .next()
+        .unwrap() // Unwrap is fine; split returns the whole string if no '.' present
+}
+
 fn player_is_whitelisted(config: &Config, player: &Player) -> bool {
     if let Some(ref whitelist) = config.player_whitelist {
         if !whitelist.is_empty() {
-            return whitelist.contains(player.identity());
+            return whitelist.contains(player.identity())
+                || whitelist.contains(get_player_bus_name(player));
         }
     }
     true
