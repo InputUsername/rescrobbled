@@ -13,17 +13,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use std::collections::HashSet;
 use std::fmt;
 use std::fs;
 use std::io;
 use std::time::Duration;
-use std::collections::HashSet;
 
 use dirs;
 
 use serde::{Deserialize, Deserializer};
 
-fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(de: D) -> Result<Option<Duration>, D::Error> {
+fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(
+    de: D,
+) -> Result<Option<Duration>, D::Error> {
     Ok(Some(Duration::from_secs(u64::deserialize(de)?)))
 }
 
@@ -62,18 +64,20 @@ impl fmt::Display for ConfigError {
 }
 
 pub fn load_config() -> Result<Config, ConfigError> {
-    let mut path = dirs::config_dir()
-        .ok_or_else(|| ConfigError::Io(io::Error::new(io::ErrorKind::NotFound, "User config directory not found")))?;
+    let mut path = dirs::config_dir().ok_or_else(|| {
+        ConfigError::Io(io::Error::new(
+            io::ErrorKind::NotFound,
+            "User config directory not found",
+        ))
+    })?;
 
     path.push("rescrobbled");
 
-    fs::create_dir_all(&path)
-        .map_err(ConfigError::Io)?;
+    fs::create_dir_all(&path).map_err(ConfigError::Io)?;
 
     path.push("config.toml");
 
-    let buffer = fs::read_to_string(&path)
-        .map_err(ConfigError::Io)?;
+    let buffer = fs::read_to_string(&path).map_err(ConfigError::Io)?;
 
     toml::from_str(&buffer)
         .map_err(|err| ConfigError::Format(format!("Could not parse config: {}", err)))

@@ -49,12 +49,13 @@ fn player_is_active(player: &Player) -> bool {
 
     match player.get_playback_status() {
         Ok(PlaybackStatus::Playing) => true,
-        _ => false
+        _ => false,
     }
 }
 
 fn get_player_bus_name<'p>(player: &'p Player) -> &'p str {
-    player.bus_name()
+    player
+        .bus_name()
         .as_cstr()
         .to_str()
         .unwrap_or("")
