@@ -164,17 +164,17 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
             .as_ref()
             .and_then(|artists| artists.first())
             .map(|&artist| artist.to_owned())
-            .unwrap_or_else(|| String::new());
+            .unwrap_or_else(String::new);
 
         let title = metadata
             .title()
             .map(|title| title.to_owned())
-            .unwrap_or_else(|| String::new());
+            .unwrap_or_else(String::new);
 
         let album = metadata
             .album_name()
             .map(|title| title.to_owned())
-            .unwrap_or_else(|| String::new());
+            .unwrap_or_else(String::new);
 
         if artist == previous_artist && title == previous_title && album == previous_album {
             if !scrobbled_current_song {

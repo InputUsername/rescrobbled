@@ -47,7 +47,7 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<(), ScrobblerError> {
 
         io::stdin().read_line(&mut input).unwrap();
         input.pop();
-        let password = input.clone();
+        let password = input;
 
         let session_response = scrobbler.authenticate_with_password(&username, &password)?;
 

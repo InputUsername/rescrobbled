@@ -63,17 +63,17 @@ impl fmt::Display for ConfigError {
 
 pub fn load_config() -> Result<Config, ConfigError> {
     let mut path = dirs::config_dir()
-        .ok_or(ConfigError::Io(io::Error::new(io::ErrorKind::NotFound, "User config directory not found")))?;
+        .ok_or_else(|| ConfigError::Io(io::Error::new(io::ErrorKind::NotFound, "User config directory not found")))?;
 
     path.push("rescrobbled");
 
     fs::create_dir_all(&path)
-        .map_err(|err| ConfigError::Io(err))?;
+        .map_err(ConfigError::Io)?;
 
     path.push("config.toml");
 
     let buffer = fs::read_to_string(&path)
-        .map_err(|err| ConfigError::Io(err))?;
+        .map_err(ConfigError::Io)?;
 
     toml::from_str(&buffer)
         .map_err(|err| ConfigError::Format(format!("Could not parse config: {}", err)))
