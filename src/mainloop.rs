@@ -191,9 +191,9 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                 let min_play_time = get_min_play_time(length, config);
 
                 if length > MIN_LENGTH && current_play_time > min_play_time {
-                    let scrobble = Scrobble::new(artist.clone(), title.clone(), album.clone());
+                    let scrobble = Scrobble::new(&artist, &title, &album);
 
-                    match scrobbler.scrobble(scrobble) {
+                    match scrobbler.scrobble(&scrobble) {
                         Ok(_) => println!("Track submitted to Last.fm successfully"),
                         Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
                     }
@@ -235,9 +235,9 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                     .unwrap();
             }
 
-            let scrobble = Scrobble::new(artist.clone(), title.clone(), album.clone());
+            let scrobble = Scrobble::new(&artist, &title, &album);
 
-            match scrobbler.now_playing(scrobble) {
+            match scrobbler.now_playing(&scrobble) {
                 Ok(_) => println!("Status updated on Last.fm successfully"),
                 Err(err) => eprintln!("Failed to update status on Last.fm: {}", err),
             }

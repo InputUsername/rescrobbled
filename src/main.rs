@@ -32,7 +32,7 @@ fn main() {
         }
     };
 
-    let mut scrobbler = Scrobbler::new(config.lastfm_key.clone(), config.lastfm_secret.clone());
+    let mut scrobbler = Scrobbler::new(&config.lastfm_key, &config.lastfm_secret);
 
     match auth::authenticate(&mut scrobbler) {
         Ok(_) => println!("Authenticated with Last.fm successfully!"),

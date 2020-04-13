@@ -29,7 +29,7 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<(), ScrobblerError> {
     let path = &path;
     if let Ok(session_key) = fs::read_to_string(&path) {
         // TODO: validate session
-        scrobbler.authenticate_with_session_key(session_key);
+        scrobbler.authenticate_with_session_key(&session_key);
     } else {
         let mut input = String::new();
 
@@ -49,7 +49,7 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<(), ScrobblerError> {
         input.pop();
         let password = input.clone();
 
-        let session_response = scrobbler.authenticate_with_password(username, password)?;
+        let session_response = scrobbler.authenticate_with_password(&username, &password)?;
 
         // We don't care whether storing the session works;
         // it's simply convenient if it does
