@@ -1,11 +1,11 @@
 [package]
 name = "rescrobbled"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-mpris = "2.0.0-rc1"
+mpris = "2.0.0-rc2"
 rustfm-scrobble = "1.0"
 listenbrainz-rust = "0.2"
 serde = { version = "1.0", features = ["derive"] }
