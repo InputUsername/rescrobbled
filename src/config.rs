@@ -33,10 +33,10 @@ fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
     #[serde(alias = "api-key")]
-    pub lastfm_key: String,
+    pub lastfm_key: Option<String>,
 
     #[serde(alias = "api-secret")]
-    pub lastfm_secret: String,
+    pub lastfm_secret: Option<String>,
 
     #[serde(alias = "lb-token")]
     pub listenbrainz_token: Option<String>,
