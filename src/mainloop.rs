@@ -95,7 +95,7 @@ fn wait_for_player<'f>(config: &Config, finder: &'f PlayerFinder) -> Player<'f> 
     }
 }
 
-pub fn run(config: &Config, scrobbler: &Scrobbler) {
+pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
     let finder = match PlayerFinder::new() {
         Ok(finder) => finder,
         Err(err) => {
@@ -106,7 +106,7 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
 
     println!("Looking for an active MPRIS player...");
 
-    let mut player = wait_for_player(config, &finder);
+    let mut player = wait_for_player(&config, &finder);
 
     println!("Found active player {}", player.identity());
 
@@ -124,7 +124,7 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                 player.identity()
             );
 
-            player = wait_for_player(config, &finder);
+            player = wait_for_player(&config, &finder);
 
             println!("Found active player {}", player.identity());
 
@@ -189,14 +189,16 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                     }
                 };
 
-                let min_play_time = get_min_play_time(length, config);
+                let min_play_time = get_min_play_time(length, &config);
 
                 if length > MIN_LENGTH && current_play_time > min_play_time {
                     let scrobble = Scrobble::new(&artist, &title, &album);
 
-                    match scrobbler.scrobble(&scrobble) {
-                        Ok(_) => println!("Track submitted to Last.fm successfully"),
-                        Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
+                    if let Some(ref scrobbler) = scrobbler {
+                        match scrobbler.scrobble(&scrobble) {
+                            Ok(_) => println!("Track submitted to Last.fm successfully"),
+                            Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
+                        }
                     }
 
                     if let Some(ref token) = config.listenbrainz_token {
@@ -239,9 +241,11 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
 
             let scrobble = Scrobble::new(&artist, &title, &album);
 
-            match scrobbler.now_playing(&scrobble) {
-                Ok(_) => println!("Status updated on Last.fm successfully"),
-                Err(err) => eprintln!("Failed to update status on Last.fm: {}", err),
+            if let Some(ref scrobbler) = scrobbler {
+                match scrobbler.now_playing(&scrobble) {
+                    Ok(_) => println!("Status updated on Last.fm successfully"),
+                    Err(err) => eprintln!("Failed to update status on Last.fm: {}", err),
+                }
             }
 
             if let Some(ref token) = config.listenbrainz_token {

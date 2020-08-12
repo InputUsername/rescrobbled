@@ -32,15 +32,24 @@ fn main() {
         }
     };
 
-    let mut scrobbler = Scrobbler::new(&config.lastfm_key, &config.lastfm_secret);
-
-    match auth::authenticate(&mut scrobbler) {
-        Ok(_) => println!("Authenticated with Last.fm successfully!"),
-        Err(err) => {
-            eprintln!("Failed to authenticate with Last.fm: {}", err);
+    let scrobbler = match (&config.lastfm_key, &config.lastfm_secret) {
+        (Some(key), Some(secret)) => {
+            let mut scrobbler = Scrobbler::new(key, secret);
+            match auth::authenticate(&mut scrobbler) {
+                Ok(_) => println!("Authenticated with Last.fm successfully!"),
+                Err(err) => {
+                    eprintln!("Failed to authenticate with Last.fm: {}", err);
+                    process::exit(1);
+                }
+            }
+            Some(scrobbler)
+        }
+        (None, None) => None,
+        _ => {
+            eprintln!("Last.fm API key or API secret are missing");
             process::exit(1);
         }
-    }
+    };
 
-    mainloop::run(&config, &scrobbler);
+    mainloop::run(config, scrobbler);
 }
