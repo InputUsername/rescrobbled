@@ -51,5 +51,9 @@ fn main() {
         }
     };
 
+    if scrobbler.is_none() && config.listenbrainz_token.is_none() {
+        eprintln!("Warning: both Last.fm and ListenBrainz API credentials are missing");
+    }
+
     mainloop::run(config, scrobbler);
 }
