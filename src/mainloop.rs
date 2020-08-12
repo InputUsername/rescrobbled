@@ -198,11 +198,12 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                         Ok(_) => println!("Track submitted to Last.fm successfully"),
                         Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
                     }
+
                     if let Some(ref token) = config.listenbrainz_token {
                         let listen = Listen {
-                            artist: &artist[..],
-                            track: &title[..],
-                            album: &album[..],
+                            artist: &artist,
+                            track: &title,
+                            album: &album,
                         };
                         match listen.single(token) {
                             Ok(_) => println!("Track submitted to ListenBrainz successfully"),
@@ -231,7 +232,7 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
                 Notification::new()
                     .summary(&title)
                     .body(&format!("{} - {}", &artist, &album))
-                    .timeout(Timeout::Milliseconds(6000)) //milliseconds
+                    .timeout(Timeout::Milliseconds(6000))
                     .show()
                     .unwrap();
             }
@@ -245,9 +246,9 @@ pub fn run(config: &Config, scrobbler: &Scrobbler) {
 
             if let Some(ref token) = config.listenbrainz_token {
                 let listen = Listen {
-                    artist: &artist[..],
-                    track: &title[..],
-                    album: &album[..],
+                    artist: &artist,
+                    track: &title,
+                    album: &album,
                 };
                 match listen.playing_now(token) {
                     Ok(_) => println!("Status updated on ListenBrainz successfully"),
