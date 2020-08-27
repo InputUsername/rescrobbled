@@ -24,6 +24,12 @@ enable-notifications = false
 min-play-time = 0 # in seconds
 player-whitelist = [ "Player MPRIS identity" ] # if empty or ommitted, will allow all players
 ```
+
+A CLI application like `playerctl` can be used to determine a player's MPRIS identity for the whitelist. To do so start playing a song and run the following command:
+```
+playerctl --list-all
+```
+
 All settings are optional, although rescrobbled isn't very useful with neither Last.fm nor ListenBrainz credentials. ;-)
 
 By default, track submission respects Last.fm's recommended behavior; songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using `min-play-time` you can override this.
