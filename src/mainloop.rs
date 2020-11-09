@@ -164,18 +164,16 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
             .artists()
             .as_ref()
             .and_then(|artists| artists.first())
-            .map(|&artist| artist.to_owned())
-            .unwrap_or_else(String::new);
+            .map(|&artist| artist)
+            .unwrap_or("");
 
         let title = metadata
             .title()
-            .map(|title| title.to_owned())
-            .unwrap_or_else(String::new);
+            .unwrap_or("");
 
         let album = metadata
             .album_name()
-            .map(|title| title.to_owned())
-            .unwrap_or_else(String::new);
+            .unwrap_or("");
 
         if artist == previous_artist && title == previous_title && album == previous_album {
             if !scrobbled_current_song {
@@ -192,7 +190,7 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
                 let min_play_time = get_min_play_time(length, &config);
 
                 if length > MIN_LENGTH && current_play_time > min_play_time {
-                    let scrobble = Scrobble::new(&artist, &title, &album);
+                    let scrobble = Scrobble::new(artist, title, album);
 
                     if let Some(ref scrobbler) = scrobbler {
                         match scrobbler.scrobble(&scrobble) {
@@ -203,9 +201,9 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
 
                     if let Some(ref token) = config.listenbrainz_token {
                         let listen = Listen {
-                            artist: &artist,
-                            track: &title,
-                            album: &album,
+                            artist: artist,
+                            track: title,
+                            album: album,
                         };
                         match listen.single(token) {
                             Ok(_) => println!("Track submitted to ListenBrainz successfully"),
@@ -220,9 +218,12 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
                 current_play_time += POLL_INTERVAL;
             }
         } else {
-            previous_artist.clone_from(&artist);
-            previous_title.clone_from(&title);
-            previous_album.clone_from(&album);
+            previous_artist.clear();
+            previous_artist.push_str(artist);
+            previous_title.clear();
+            previous_title.push_str(title);
+            previous_album.clear();
+            previous_album.push_str(album);
 
             current_play_time = Duration::from_secs(0);
             scrobbled_current_song = false;
@@ -233,13 +234,13 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
             if config.enable_notifications.unwrap_or(false) {
                 Notification::new()
                     .summary(&title)
-                    .body(&format!("{} - {}", &artist, &album))
+                    .body(&format!("{} - {}", artist, album))
                     .timeout(Timeout::Milliseconds(6000))
                     .show()
                     .unwrap();
             }
 
-            let scrobble = Scrobble::new(&artist, &title, &album);
+            let scrobble = Scrobble::new(artist, title, album);
 
             if let Some(ref scrobbler) = scrobbler {
                 match scrobbler.now_playing(&scrobble) {
@@ -250,9 +251,9 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
 
             if let Some(ref token) = config.listenbrainz_token {
                 let listen = Listen {
-                    artist: &artist,
-                    track: &title,
-                    album: &album,
+                    artist: artist,
+                    track: title,
+                    album: album,
                 };
                 match listen.playing_now(token) {
                     Ok(_) => println!("Status updated on ListenBrainz successfully"),
