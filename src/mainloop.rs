@@ -169,13 +169,9 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
             .map(|&artist| artist)
             .unwrap_or("");
 
-        let title = metadata
-            .title()
-            .unwrap_or("");
+        let title = metadata.title().unwrap_or("");
 
-        let album = metadata
-            .album_name()
-            .unwrap_or("");
+        let album = metadata.album_name().unwrap_or("");
 
         let length = match metadata.length() {
             Some(length) => length,
