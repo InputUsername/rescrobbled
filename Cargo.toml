@@ -6,9 +6,9 @@ edition = "2018"
 
 [dependencies]
 mpris = "2.0.0-rc2"
-rustfm-scrobble = "1.0"
+rustfm-scrobble = "1"
 listenbrainz-rust = "0.2"
 serde = { version = "1.0", features = ["derive"] }
-toml = "0.5.0"
-dirs = "2.0"
-notify-rust = "3"
+toml = "0.5"
+dirs = "3"
+notify-rust = "4"
