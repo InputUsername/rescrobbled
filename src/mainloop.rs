@@ -20,7 +20,7 @@ use rustfm_scrobble::{Scrobble, Scrobbler};
 use notify_rust::{Notification, Timeout};
 use std::process;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use crate::config::Config;
 
@@ -114,6 +114,7 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
     let mut previous_title = String::new();
     let mut previous_album = String::new();
 
+    let mut timer = Instant::now();
     let mut current_play_time = Duration::from_secs(0);
     let mut scrobbled_current_song = false;
 
@@ -132,6 +133,7 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
             previous_title.clear();
             previous_album.clear();
 
+            timer = Instant::now();
             current_play_time = Duration::from_secs(0);
             scrobbled_current_song = false;
         }
@@ -215,7 +217,8 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
                     scrobbled_current_song = true;
                 }
 
-                current_play_time += POLL_INTERVAL;
+                current_play_time += timer.elapsed();
+                timer = Instant::now();
             }
         } else {
             previous_artist.clear();
@@ -225,6 +228,7 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
             previous_album.clear();
             previous_album.push_str(album);
 
+            timer = Instant::now();
             current_play_time = Duration::from_secs(0);
             scrobbled_current_song = false;
 
