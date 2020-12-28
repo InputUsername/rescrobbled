@@ -8,6 +8,9 @@
 
 - Improved usage instructions
 - Renamed config options (old names still supported)
+    - `api-key` => `lastfm-key`
+    - `api-secret` => `lastfm-secret`
+    - `lb-token` => `listenbrainz-token`
 - Added music player whitelisting (by MPRIS identity or D-Bus bus name)
 - Made Last.fm scrobbling optional
 
