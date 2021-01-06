@@ -50,6 +50,8 @@ pub struct Config {
     pub min_play_time: Option<Duration>,
 
     pub player_whitelist: Option<HashSet<String>>,
+
+    pub filter_script: Option<String>,
 }
 
 #[derive(Debug)]

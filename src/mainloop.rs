@@ -16,13 +16,14 @@
 use listenbrainz_rust::Listen;
 use mpris::{PlaybackStatus, PlayerFinder};
 use rustfm_scrobble::{Scrobble, Scrobbler};
-
 use notify_rust::{Notification, Timeout};
+
 use std::process;
 use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::config::Config;
+use crate::filter::filter_metadata;
 use crate::player;
 
 const POLL_INTERVAL: Duration = Duration::from_millis(500);
@@ -133,7 +134,10 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
                 let min_play_time = get_min_play_time(length, &config);
 
                 if length > MIN_LENGTH && current_play_time > min_play_time {
-                    let scrobble = Scrobble::new(artist, title, album);
+                    let (filtered_artist, filtered_title, filtered_album) = filter_metadata(&config, artist, title, album)
+                        .unwrap_or_else(|| (artist.to_string(), title.to_string(), album.to_string()));
+
+                    let scrobble = Scrobble::new(&filtered_artist, &filtered_title, &filtered_album);
 
                     if let Some(ref scrobbler) = scrobbler {
                         match scrobbler.scrobble(&scrobble) {
@@ -144,9 +148,9 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
 
                     if let Some(ref token) = config.listenbrainz_token {
                         let listen = Listen {
-                            artist: artist,
-                            track: title,
-                            album: album,
+                            artist: &filtered_artist,
+                            track: &filtered_title,
+                            album: &filtered_album,
                         };
                         match listen.single(token) {
                             Ok(_) => println!("Track submitted to ListenBrainz successfully"),
@@ -172,23 +176,26 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
             previous_album.clear();
             previous_album.push_str(album);
 
+            let (filtered_artist, filtered_title, filtered_album) = filter_metadata(&config, artist, title, album)
+                        .unwrap_or_else(|| (artist.to_string(), title.to_string(), album.to_string()));
+
             timer = Instant::now();
             current_play_time = Duration::from_secs(0);
             scrobbled_current_song = false;
 
             println!("----");
-            println!("Now playing: {} - {} ({})", artist, title, album);
+            println!("Now playing: {} - {} ({})", filtered_artist, filtered_title, filtered_album);
 
             if config.enable_notifications.unwrap_or(false) {
                 Notification::new()
-                    .summary(&title)
-                    .body(&format!("{} - {}", artist, album))
+                    .summary(&filtered_title)
+                    .body(&format!("{} - {}", filtered_artist, filtered_album))
                     .timeout(Timeout::Milliseconds(6000))
                     .show()
                     .unwrap();
             }
 
-            let scrobble = Scrobble::new(artist, title, album);
+            let scrobble = Scrobble::new(&filtered_artist, &filtered_title, &filtered_album);
 
             if let Some(ref scrobbler) = scrobbler {
                 match scrobbler.now_playing(&scrobble) {
@@ -199,9 +206,9 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
 
             if let Some(ref token) = config.listenbrainz_token {
                 let listen = Listen {
-                    artist: artist,
-                    track: title,
-                    album: album,
+                    artist: &filtered_artist,
+                    track: &filtered_title,
+                    album: &filtered_album,
                 };
                 match listen.playing_now(token) {
                     Ok(_) => println!("Status updated on ListenBrainz successfully"),
