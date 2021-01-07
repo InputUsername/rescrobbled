@@ -51,6 +51,7 @@ pub struct Config {
     pub player_whitelist: Option<HashSet<String>>,
 }
 
+#[derive(Debug)]
 pub enum ConfigError {
     Io(io::Error),
     Format(String),
