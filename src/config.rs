@@ -17,11 +17,13 @@ use std::collections::HashSet;
 use std::fmt;
 use std::fs;
 use std::io;
+use std::path::PathBuf;
 use std::time::Duration;
 
-use dirs;
-
 use serde::{Deserialize, Deserializer};
+
+const CONFIG_DIR: &str = "rescrobbled";
+const CONFIG_FILE: &str = "config.toml";
 
 fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(
     de: D,
@@ -63,7 +65,7 @@ impl fmt::Display for ConfigError {
     }
 }
 
-pub fn load_config() -> Result<Config, ConfigError> {
+pub fn config_dir() -> Result<PathBuf, ConfigError> {
     let mut path = dirs::config_dir().ok_or_else(|| {
         ConfigError::Io(io::Error::new(
             io::ErrorKind::NotFound,
@@ -71,11 +73,17 @@ pub fn load_config() -> Result<Config, ConfigError> {
         ))
     })?;
 
-    path.push("rescrobbled");
+    path.push(CONFIG_DIR);
 
     fs::create_dir_all(&path).map_err(ConfigError::Io)?;
 
-    path.push("config.toml");
+    Ok(path)
+}
+
+pub fn load_config() -> Result<Config, ConfigError> {
+    let mut path = config_dir()?;
+
+    path.push(CONFIG_FILE);
 
     let buffer = fs::read_to_string(&path).map_err(ConfigError::Io)?;
 
