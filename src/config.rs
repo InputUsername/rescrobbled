@@ -17,11 +17,14 @@ use std::collections::HashSet;
 use std::fmt;
 use std::fs;
 use std::io;
+use std::path::PathBuf;
 use std::time::Duration;
 
-use dirs;
-
 use serde::{Deserialize, Deserializer};
+
+const CONFIG_DIR: &str = "rescrobbled";
+const CONFIG_FILE: &str = "config.toml";
+const CONFIG_TEMPLATE: &str = include_str!("../config_template.toml");
 
 fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(
     de: D,
@@ -49,9 +52,11 @@ pub struct Config {
     pub player_whitelist: Option<HashSet<String>>,
 }
 
+#[derive(Debug)]
 pub enum ConfigError {
     Io(io::Error),
     Format(String),
+    Created(PathBuf),
 }
 
 impl fmt::Display for ConfigError {
@@ -59,11 +64,14 @@ impl fmt::Display for ConfigError {
         match self {
             ConfigError::Io(err) => write!(f, "{}", err),
             ConfigError::Format(msg) => write!(f, "{}", msg),
+            ConfigError::Created(path) => {
+                write!(f, "Created config file at {}", path.to_string_lossy())
+            }
         }
     }
 }
 
-pub fn load_config() -> Result<Config, ConfigError> {
+pub fn config_dir() -> Result<PathBuf, ConfigError> {
     let mut path = dirs::config_dir().ok_or_else(|| {
         ConfigError::Io(io::Error::new(
             io::ErrorKind::NotFound,
@@ -71,11 +79,22 @@ pub fn load_config() -> Result<Config, ConfigError> {
         ))
     })?;
 
-    path.push("rescrobbled");
+    path.push(CONFIG_DIR);
 
     fs::create_dir_all(&path).map_err(ConfigError::Io)?;
 
-    path.push("config.toml");
+    Ok(path)
+}
+
+pub fn load_config() -> Result<Config, ConfigError> {
+    let mut path = config_dir()?;
+
+    path.push(CONFIG_FILE);
+
+    if !path.exists() {
+        fs::write(&path, CONFIG_TEMPLATE).map_err(ConfigError::Io)?;
+        return Err(ConfigError::Created(path));
+    }
 
     let buffer = fs::read_to_string(&path).map_err(ConfigError::Io)?;
 

@@ -23,9 +23,19 @@ mod auth;
 mod config;
 mod mainloop;
 
+use config::ConfigError;
+
 fn main() {
     let config = match config::load_config() {
         Ok(config) => config,
+        Err(ConfigError::Created(path)) => {
+            println!(
+                "Config file did not exist; created it at {}\n\
+                Please update it with your Last.fm/ListenBrainz API information.",
+                path.to_string_lossy()
+            );
+            return;
+        }
         Err(err) => {
             eprintln!("Error while loading config: {}", err);
             process::exit(1);

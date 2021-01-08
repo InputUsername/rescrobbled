@@ -13,20 +13,20 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use dirs;
 use std::fs;
 use std::io;
 use std::io::Write;
+
+use crate::config;
 
 use rustfm_scrobble::{Scrobbler, ScrobblerError};
 
 const SESSION_FILE: &str = "session";
 
 pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<(), ScrobblerError> {
-    let mut path = dirs::config_dir().unwrap();
-    path.push("rescrobbled");
+    let mut path = config::config_dir().unwrap();
     path.push(SESSION_FILE);
-    let path = &path;
+
     if let Ok(session_key) = fs::read_to_string(&path) {
         // TODO: validate session
         scrobbler.authenticate_with_session_key(&session_key);
