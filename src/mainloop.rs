@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use listenbrainz_rust::Listen;
-use mpris::{PlaybackStatus, Player, PlayerFinder};
+use mpris::{PlaybackStatus, PlayerFinder};
 use rustfm_scrobble::{Scrobble, Scrobbler};
 
 use notify_rust::{Notification, Timeout};
@@ -23,14 +23,12 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::config::Config;
+use crate::player;
 
-const INIT_WAIT_TIME: Duration = Duration::from_secs(1);
 const POLL_INTERVAL: Duration = Duration::from_millis(500);
 
 const MIN_LENGTH: Duration = Duration::from_secs(30);
 const MIN_PLAY_TIME: Duration = Duration::from_secs(4 * 60);
-
-const BUS_NAME_PREFIX: &str = "org.mpris.MediaPlayer2.";
 
 fn get_min_play_time(track_length: Duration, config: &Config) -> Duration {
     config.min_play_time.unwrap_or_else(|| {
@@ -40,59 +38,6 @@ fn get_min_play_time(track_length: Duration, config: &Config) -> Duration {
             MIN_PLAY_TIME
         }
     })
-}
-
-fn player_is_active(player: &Player) -> bool {
-    if !player.is_running() {
-        return false;
-    }
-
-    match player.get_playback_status() {
-        Ok(PlaybackStatus::Playing) => true,
-        _ => false,
-    }
-}
-
-fn get_player_bus_name<'p>(player: &'p Player) -> &'p str {
-    player
-        .bus_name()
-        .as_cstr()
-        .to_str()
-        .unwrap_or("")
-        .trim_start_matches(BUS_NAME_PREFIX)
-        .split('.') // Remove the instance part of the unique name
-        .next()
-        .unwrap() // Unwrap is fine; split returns the whole string if no '.' present
-}
-
-fn player_is_whitelisted(config: &Config, player: &Player) -> bool {
-    if let Some(ref whitelist) = config.player_whitelist {
-        if !whitelist.is_empty() {
-            return whitelist.contains(player.identity())
-                || whitelist.contains(get_player_bus_name(player));
-        }
-    }
-    true
-}
-
-fn wait_for_player<'f>(config: &Config, finder: &'f PlayerFinder) -> Player<'f> {
-    loop {
-        let players = match finder.find_all() {
-            Ok(players) => players,
-            _ => {
-                thread::sleep(INIT_WAIT_TIME);
-                continue;
-            }
-        };
-
-        for player in players {
-            if player_is_active(&player) && player_is_whitelisted(config, &player) {
-                return player;
-            }
-        }
-
-        thread::sleep(INIT_WAIT_TIME);
-    }
 }
 
 pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
@@ -106,7 +51,7 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
 
     println!("Looking for an active MPRIS player...");
 
-    let mut player = wait_for_player(&config, &finder);
+    let mut player = player::wait_for_player(&config, &finder);
 
     println!("Found active player {}", player.identity());
 
@@ -119,13 +64,13 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
     let mut scrobbled_current_song = false;
 
     loop {
-        if !player_is_active(&player) {
+        if !player::is_active(&player) {
             println!(
                 "Player {} stopped, looking for a new MPRIS player...",
                 player.identity()
             );
 
-            player = wait_for_player(&config, &finder);
+            player = player::wait_for_player(&config, &finder);
 
             println!("Found active player {}", player.identity());
 

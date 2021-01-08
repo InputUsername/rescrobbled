@@ -22,6 +22,7 @@ use rustfm_scrobble::Scrobbler;
 mod auth;
 mod config;
 mod mainloop;
+mod player;
 
 use config::ConfigError;
 
