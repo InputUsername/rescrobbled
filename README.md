@@ -23,16 +23,22 @@ listenbrainz-token = "ListenBrainz API token"
 enable-notifications = false
 min-play-time = 0 # in seconds
 player-whitelist = [ "Player MPRIS identity" ] # if empty or ommitted, will allow all players
+filter-script = "path/to/script"
 ```
+
+All settings are optional, although rescrobbled isn't very useful with neither Last.fm nor ListenBrainz credentials. ;-)
+
+By default, track submission respects Last.fm's recommended behavior; songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using `min-play-time` you can override this.
 
 A CLI application like `playerctl` can be used to determine a player's MPRIS identity for the whitelist. To do so start playing a song and run the following command:
 ```
 playerctl --list-all
 ```
 
-All settings are optional, although rescrobbled isn't very useful with neither Last.fm nor ListenBrainz credentials. ;-)
-
-By default, track submission respects Last.fm's recommended behavior; songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using `min-play-time` you can override this.
+The `filter-script` will be run before submitting tracks to Last.fm and/or ListenBrainz.
+It receives the artist, song title and album name on consecutive lines of its standard input
+(in that order). The script should provide the filtered metadata on corresponding lines of its standard output.
+This can be used to clean up song names, for example removing "remastered" and similar suffixes.
 
 ### Running rescrobbled
 
