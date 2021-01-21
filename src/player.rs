@@ -16,7 +16,7 @@
 use std::thread;
 use std::time::Duration;
 
-use mpris::{Player, PlayerFinder, PlaybackStatus};
+use mpris::{PlaybackStatus, Player, PlayerFinder};
 
 use crate::config::Config;
 
@@ -52,8 +52,7 @@ fn bus_name<'p>(player: &'p Player) -> &'p str {
 fn is_whitelisted(config: &Config, player: &Player) -> bool {
     if let Some(ref whitelist) = config.player_whitelist {
         if !whitelist.is_empty() {
-            return whitelist.contains(player.identity())
-                || whitelist.contains(bus_name(player));
+            return whitelist.contains(player.identity()) || whitelist.contains(bus_name(player));
         }
     }
     true

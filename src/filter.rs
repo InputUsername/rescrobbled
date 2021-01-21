@@ -1,9 +1,14 @@
-use std::process::{Command, Stdio};
 use std::io::Write;
+use std::process::{Command, Stdio};
 
 use crate::config::Config;
 
-pub fn filter_metadata(config: &Config, artist: &str, title: &str, album: &str) -> Option<(String, String, String)> {
+pub fn filter_metadata(
+    config: &Config,
+    artist: &str,
+    title: &str,
+    album: &str,
+) -> Option<(String, String, String)> {
     if config.filter_script.is_none() {
         return None;
     }
@@ -87,8 +92,7 @@ mod tests {
         use std::fs;
         use std::os::unix::fs::PermissionsExt;
 
-        const FILTER_SCRIPT: &str =
-"#!/usr/bin/bash
+        const FILTER_SCRIPT: &str = "#!/usr/bin/bash
 read artist
 read title
 read album

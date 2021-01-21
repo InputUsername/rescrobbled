@@ -15,8 +15,8 @@
 
 use listenbrainz_rust::Listen;
 use mpris::{PlaybackStatus, PlayerFinder};
-use rustfm_scrobble::{Scrobble, Scrobbler};
 use notify_rust::{Notification, Timeout};
+use rustfm_scrobble::{Scrobble, Scrobbler};
 
 use std::process;
 use std::thread;
@@ -134,10 +134,13 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
                 let min_play_time = get_min_play_time(length, &config);
 
                 if length > MIN_LENGTH && current_play_time > min_play_time {
-                    let (filtered_artist, filtered_title, filtered_album) = filter_metadata(&config, artist, title, album)
-                        .unwrap_or_else(|| (artist.to_string(), title.to_string(), album.to_string()));
+                    let (filtered_artist, filtered_title, filtered_album) =
+                        filter_metadata(&config, artist, title, album).unwrap_or_else(|| {
+                            (artist.to_string(), title.to_string(), album.to_string())
+                        });
 
-                    let scrobble = Scrobble::new(&filtered_artist, &filtered_title, &filtered_album);
+                    let scrobble =
+                        Scrobble::new(&filtered_artist, &filtered_title, &filtered_album);
 
                     if let Some(ref scrobbler) = scrobbler {
                         match scrobbler.scrobble(&scrobble) {
@@ -176,15 +179,19 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
             previous_album.clear();
             previous_album.push_str(album);
 
-            let (filtered_artist, filtered_title, filtered_album) = filter_metadata(&config, artist, title, album)
-                        .unwrap_or_else(|| (artist.to_string(), title.to_string(), album.to_string()));
+            let (filtered_artist, filtered_title, filtered_album) =
+                filter_metadata(&config, artist, title, album)
+                    .unwrap_or_else(|| (artist.to_string(), title.to_string(), album.to_string()));
 
             timer = Instant::now();
             current_play_time = Duration::from_secs(0);
             scrobbled_current_song = false;
 
             println!("----");
-            println!("Now playing: {} - {} ({})", filtered_artist, filtered_title, filtered_album);
+            println!(
+                "Now playing: {} - {} ({})",
+                filtered_artist, filtered_title, filtered_album
+            );
 
             if config.enable_notifications.unwrap_or(false) {
                 Notification::new()
