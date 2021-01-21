@@ -1,15 +1,14 @@
 # rescrobbled
 
-Rescrobbled is a music scrobbler daemon written in Rust. Among other things, due to sharing a Spotify account (I know, I know), I needed a way to scrobble to [Last.fm](https://last.fm) without connecting the Spotify account to my Last.fm account.
-Rescrobbled detects active media players running on D-Bus using `MPRIS`, automatically updates "now playing" status, and scrobbles songs to Last.fm or [ListenBrainz](https://listenbrainz.org) as they play.
+Rescrobbled is a music scrobbler daemon. It detects active media players running on D-Bus using `MPRIS`, automatically updates "now playing" status, and scrobbles songs to Last.fm or [ListenBrainz](https://listenbrainz.org) as they play.
+
+Among other things, due to sharing a Spotify account (I know, I know), I needed a way to scrobble to [Last.fm](https://last.fm) without connecting the Spotify account to my Last.fm account. Rescrobbled offers a simple solution for this.
 
 ## How to install and use
 
 You can download one of the prebuilt binaries [here](https://github.com/InputUsername/rescrobbled/releases). The binary can be placed anywhere you like.
 
 Alternatively you can install from source using `cargo install --path .` from the crate root.
-
-There is also an [Arch Linux AUR package](https://aur.archlinux.org/packages/rescrobbled-git/) by [brycied00d](https://github.com/brycied00d). (I do not maintain this so I cannot provide support for it.)
 
 To use rescrobbled with Last.fm, you'll need a Last.fm API key and secret. These can be obtained [here](https://www.last.fm/api/account/create). To use ListenBrainz, you'll need a user token which can be found [here](https://listenbrainz.org/profile/).
 
@@ -26,7 +25,7 @@ player-whitelist = [ "Player MPRIS identity" ] # if empty or ommitted, will allo
 filter-script = "path/to/script"
 ```
 
-All settings are optional, although rescrobbled isn't very useful with neither Last.fm nor ListenBrainz credentials. ;-)
+All settings are optional, although rescrobbled isn't very useful without Last.fm or ListenBrainz credentials. ;-)
 
 By default, track submission respects Last.fm's recommended behavior; songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using `min-play-time` you can override this.
 
