@@ -32,7 +32,7 @@ fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(
     Ok(Some(Duration::from_secs(u64::deserialize(de)?)))
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
     #[serde(alias = "api-key")]
@@ -50,6 +50,8 @@ pub struct Config {
     pub min_play_time: Option<Duration>,
 
     pub player_whitelist: Option<HashSet<String>>,
+
+    pub filter_script: Option<String>,
 }
 
 #[derive(Debug)]

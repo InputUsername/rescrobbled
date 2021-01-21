@@ -21,6 +21,7 @@ use rustfm_scrobble::Scrobbler;
 
 mod auth;
 mod config;
+mod filter;
 mod mainloop;
 mod player;
 
