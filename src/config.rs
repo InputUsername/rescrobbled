@@ -32,7 +32,7 @@ fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(
     Ok(Some(Duration::from_secs(u64::deserialize(de)?)))
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
     #[serde(alias = "api-key")]

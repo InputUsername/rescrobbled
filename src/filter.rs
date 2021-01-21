@@ -77,3 +77,39 @@ pub fn filter_metadata(config: &Config, artist: &str, title: &str, album: &str) 
         output.next()?.to_string(),
     ))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_filter_script() {
+        use std::fs;
+        use std::os::unix::fs::PermissionsExt;
+
+        const FILTER_SCRIPT: &str =
+"#!/usr/bin/bash
+read artist
+read title
+read album
+echo \"Artist=$artist\"
+echo \"Title=$title\"
+echo \"Album=$album\"
+";
+
+        let temp_dir = tempfile::tempdir().unwrap();
+        let path = temp_dir.path().join("filter.sh");
+
+        fs::write(&path, FILTER_SCRIPT).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+
+        let mut config = Config::default();
+        config.filter_script = Some(path.to_string_lossy().into_owned());
+
+        let (artist, title, album) = filter_metadata(&config, "lorem", "ipsum", "dolor").unwrap();
+
+        assert_eq!(artist, "Artist=lorem");
+        assert_eq!(title, "Title=ipsum");
+        assert_eq!(album, "Album=dolor");
+    }
+}
