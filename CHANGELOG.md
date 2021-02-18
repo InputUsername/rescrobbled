@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.3.0 (unreleased)
+## v0.3.0 (2021-02-18)
 
 - Fixed a bug where a single song on repeat only scrobbled once
 - Rescrobbled now creates the config file if it doesn't exist
