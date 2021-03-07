@@ -10,6 +10,8 @@ You can download one of the prebuilt binaries [here](https://github.com/InputUse
 
 Alternatively you can install from source using `cargo install --path .` from the crate root.
 
+There is also an [AUR package](https://aur.archlinux.org/packages/rescrobbled-git/) by [brycied00d](https://github.com/brycied00d), which should always build the latest version of rescrobbled from this repository.
+
 To use rescrobbled with Last.fm, you'll need a Last.fm API key and secret. These can be obtained [here](https://www.last.fm/api/account/create). To use ListenBrainz, you'll need a user token which can be found [here](https://listenbrainz.org/profile/).
 
 ### Configuration
