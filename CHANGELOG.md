@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.1 (2021-03-29)
+
+- Fixed a typo in the config file template (`lastfm-token` => `lastfm-key`)
+
 ## v0.3.0 (2021-02-18)
 
 - Fixed a bug where a single song on repeat only scrobbled once
