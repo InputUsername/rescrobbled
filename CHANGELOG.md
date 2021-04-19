@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.3.2 (2021-04-19)
+
+- Fixed config template typos (`min_play_time` => `min-play-time`, `player_whitelist` => `player-whitelist`)
+
 ## v0.3.1 (2021-03-29)
 
 - Fixed a typo in the config file template (`lastfm-token` => `lastfm-key`)
