@@ -20,11 +20,10 @@ use std::io;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 const CONFIG_DIR: &str = "rescrobbled";
 const CONFIG_FILE: &str = "config.toml";
-const CONFIG_TEMPLATE: &str = include_str!("../config_template.toml");
 
 fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(
     de: D,
@@ -32,7 +31,18 @@ fn deserialize_duration_seconds<'de, D: Deserializer<'de>>(
     Ok(Some(Duration::from_secs(u64::deserialize(de)?)))
 }
 
-#[derive(Deserialize, Default)]
+fn serialize_duration_seconds<S: Serializer>(
+    value: &Option<Duration>,
+    se: S,
+) -> Result<S::Ok, S::Error> {
+    if let Some(d) = value {
+        se.serialize_some(&d.as_secs())
+    } else {
+        se.serialize_none()
+    }
+}
+
+#[derive(Deserialize, Serialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
     #[serde(alias = "api-key")]
@@ -46,12 +56,35 @@ pub struct Config {
 
     pub enable_notifications: Option<bool>,
 
-    #[serde(default, deserialize_with = "deserialize_duration_seconds")]
+    #[serde(
+        default,
+        deserialize_with = "deserialize_duration_seconds",
+        serialize_with = "serialize_duration_seconds"
+    )]
     pub min_play_time: Option<Duration>,
 
     pub player_whitelist: Option<HashSet<String>>,
 
     pub filter_script: Option<String>,
+}
+
+impl Config {
+    fn template() -> String {
+        let template = Self {
+            lastfm_key: Some(String::new()),
+            lastfm_secret: Some(String::new()),
+            listenbrainz_token: Some(String::new()),
+            enable_notifications: Some(false),
+            min_play_time: Some(Duration::from_secs(0)),
+            player_whitelist: Some(HashSet::new()),
+            filter_script: Some(String::new()),
+        };
+        toml::to_string(&template)
+            .unwrap()
+            .lines()
+            .map(|l| format!("# {}\n", l))
+            .collect()
+    }
 }
 
 #[derive(Debug)]
@@ -94,7 +127,7 @@ pub fn load_config() -> Result<Config, ConfigError> {
     path.push(CONFIG_FILE);
 
     if !path.exists() {
-        fs::write(&path, CONFIG_TEMPLATE).map_err(ConfigError::Io)?;
+        fs::write(&path, Config::template()).map_err(ConfigError::Io)?;
         return Err(ConfigError::Created(path));
     }
 
