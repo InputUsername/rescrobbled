@@ -92,6 +92,10 @@ mod tests {
         use std::fs;
         use std::os::unix::fs::PermissionsExt;
 
+        let mut config = Config::default();
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        let path = temp_dir.path().join("filter.sh");
         const FILTER_SCRIPT: &str = "#!/usr/bin/bash
 read artist
 read title
@@ -101,13 +105,9 @@ echo \"Title=$title\"
 echo \"Album=$album\"
 ";
 
-        let temp_dir = tempfile::tempdir().unwrap();
-        let path = temp_dir.path().join("filter.sh");
-
         fs::write(&path, FILTER_SCRIPT).unwrap();
         fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
 
-        let mut config = Config::default();
         config.filter_script = Some(path.to_string_lossy().into_owned());
 
         let (artist, title, album) = filter_metadata(&config, "lorem", "ipsum", "dolor").unwrap();
@@ -115,5 +115,20 @@ echo \"Album=$album\"
         assert_eq!(artist, "Artist=lorem");
         assert_eq!(title, "Title=ipsum");
         assert_eq!(album, "Album=dolor");
+
+        // Script that produces no output should result in
+        // `filter_metadata` returning `None`
+
+        let path_ignore = temp_dir.path().join("filter_ignore.sh");
+        const FILTER_SCRIPT_IGNORE: &str = "#!/usr/bin/bash
+true
+";
+
+        fs::write(&path_ignore, FILTER_SCRIPT_IGNORE).unwrap();
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+
+        config.filter_script = Some(path_ignore.to_string_lossy().into_owned());
+
+        assert!(filter_metadata(&config, "lorem", "ipsum", "dolor").is_none());
     }
 }
