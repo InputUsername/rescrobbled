@@ -24,6 +24,7 @@ mod config;
 mod filter;
 mod mainloop;
 mod player;
+mod track;
 
 use config::ConfigError;
 
