@@ -27,7 +27,14 @@ mod player;
 
 use config::ConfigError;
 
+const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+
 fn main() {
+    if std::env::args().any(|arg| arg == "-v" || arg == "--version") {
+        println!("rescrobbled v{}", VERSION);
+        return;
+    }
+
     let config = match config::load_config() {
         Ok(config) => config,
         Err(ConfigError::Created(path)) => {
