@@ -23,7 +23,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::config::Config;
-use crate::filter::{FilterResult, filter_metadata};
+use crate::filter::{filter_metadata, FilterResult};
 use crate::player;
 use crate::track::Track;
 
@@ -123,13 +123,17 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
 
                 if length > MIN_LENGTH && current_play_time > min_play_time {
                     match filter_metadata(&config, current_track) {
-                        Ok(FilterResult::Filtered(track)) | Ok(FilterResult::NotFiltered(track)) => {
+                        Ok(FilterResult::Filtered(track))
+                        | Ok(FilterResult::NotFiltered(track)) => {
                             if let Some(ref scrobbler) = scrobbler {
-                                let scrobble = Scrobble::new(track.artist(), track.title(), track.album());
+                                let scrobble =
+                                    Scrobble::new(track.artist(), track.title(), track.album());
 
                                 match scrobbler.scrobble(&scrobble) {
                                     Ok(_) => println!("Track submitted to Last.fm successfully"),
-                                    Err(err) => eprintln!("Failed to submit track to Last.fm: {}", err),
+                                    Err(err) => {
+                                        eprintln!("Failed to submit track to Last.fm: {}", err)
+                                    }
                                 }
                             }
 
@@ -144,7 +148,10 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
                                         println!("Track submitted to ListenBrainz successfully");
                                     }
                                     Err(err) => {
-                                        eprintln!("Failed to submit track to ListenBrainz: {}", err);
+                                        eprintln!(
+                                            "Failed to submit track to ListenBrainz: {}",
+                                            err
+                                        );
                                     }
                                 }
                             }
@@ -172,7 +179,11 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
             if config.enable_notifications.unwrap_or(false) {
                 Notification::new()
                     .summary(&current_track.title())
-                    .body(&format!("{} - {}", current_track.artist(), current_track.album()))
+                    .body(&format!(
+                        "{} - {}",
+                        current_track.artist(),
+                        current_track.album()
+                    ))
                     .timeout(Timeout::Milliseconds(6000))
                     .show()
                     .unwrap();
@@ -181,7 +192,9 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
             println!("----");
             println!(
                 "Now playing: {} - {} ({})",
-                current_track.artist(), current_track.title(), current_track.album()
+                current_track.artist(),
+                current_track.title(),
+                current_track.album()
             );
 
             match filter_metadata(&config, current_track) {
@@ -202,7 +215,9 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
                         };
                         match listen.playing_now(token) {
                             Ok(_) => println!("Status updated on ListenBrainz successfully"),
-                            Err(err) => eprintln!("Failed to update status on ListenBrainz: {}", err),
+                            Err(err) => {
+                                eprintln!("Failed to update status on ListenBrainz: {}", err)
+                            }
                         }
                     }
                 }

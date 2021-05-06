@@ -22,7 +22,8 @@ pub fn filter_metadata(config: &Config, track: Track) -> Result<FilterResult, St
         .spawn()
         .map_err(|err| format!("Failed to run filter script: {}", err))?;
 
-    let mut stdin = child.stdin
+    let mut stdin = child
+        .stdin
         .take()
         .ok_or_else(|| "Failed to get a stdin handle for the filter script".to_owned())?;
 
@@ -62,7 +63,7 @@ pub fn filter_metadata(config: &Config, track: Track) -> Result<FilterResult, St
         (Some(artist), Some(title), Some(album)) => {
             Ok(FilterResult::Filtered(Track::new(artist, title, album)))
         }
-        _ => Ok(FilterResult::Ignored)
+        _ => Ok(FilterResult::Ignored),
     }
 }
 
@@ -95,7 +96,11 @@ echo \"Album=$album\"
 
         assert_eq!(
             filter_metadata(&config, Track::new("lorem", "ipsum", "dolor")),
-            Ok(FilterResult::Filtered(Track::new("Artist=lorem", "Title=ipsum", "Album=dolor")))
+            Ok(FilterResult::Filtered(Track::new(
+                "Artist=lorem",
+                "Title=ipsum",
+                "Album=dolor"
+            )))
         );
 
         // Script that produces no output should result in `FilterResult::Ignored`
@@ -121,7 +126,9 @@ true
 
         assert_eq!(
             filter_metadata(&config, Track::new("lorem", "ipsum", "dolor")),
-            Ok(FilterResult::NotFiltered(Track::new("lorem", "ipsum", "dolor")))
+            Ok(FilterResult::NotFiltered(Track::new(
+                "lorem", "ipsum", "dolor"
+            )))
         );
     }
 }

@@ -8,9 +8,17 @@ pub struct Track {
 }
 
 impl Track {
-    pub fn artist(&self) -> &str { &self.artist }
-    pub fn title(&self) -> &str { &self.title }
-    pub fn album(&self) -> &str { &self.album }
+    pub fn artist(&self) -> &str {
+        &self.artist
+    }
+
+    pub fn title(&self) -> &str {
+        &self.title
+    }
+
+    pub fn album(&self) -> &str {
+        &self.album
+    }
 
     pub fn new(artist: &str, title: &str, album: &str) -> Self {
         Self {
@@ -33,7 +41,8 @@ impl Track {
     }
 
     pub fn from_metadata(metadata: &Metadata) -> Self {
-        let artist = metadata.artists()
+        let artist = metadata
+            .artists()
             .as_ref()
             .and_then(|artists| artists.first())
             .map(|&artist| artist)
@@ -44,6 +53,10 @@ impl Track {
 
         let album = metadata.album_name().unwrap_or("").to_owned();
 
-        Self { artist, title, album }
+        Self {
+            artist,
+            title,
+            album,
+        }
     }
 }
