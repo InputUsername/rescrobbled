@@ -1,8 +1,16 @@
 [package]
 name = "rescrobbled"
-version = "0.3.2"
+version = "0.3.3"
 authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
 edition = "2018"
+license = "GPL-3.0"
+repository = "https://github.com/InputUsername/rescrobbled.git"
+homepage = "https://github.com/InputUsername/rescrobbled"
+readme = "README.md"
+description = "MPRIS music scrobbler daemon"
+keywords = ["mpris", "music", "scrobble", "daemon"]
+categories = ["multimedia", "command-line-utilities"]
+publish = true
 
 [dependencies]
 mpris = "2.0.0-rc2"

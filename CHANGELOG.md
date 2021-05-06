@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.3.3 (2021-05-06)
+
+- Added `-v` (`--version`) command-line switch to get the program's version
+- Released on crates.io
+
 ## v0.3.2 (2021-04-19)
 
 - Fixed config template typos (`min_play_time` => `min-play-time`, `player_whitelist` => `player-whitelist`)

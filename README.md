@@ -1,5 +1,8 @@
 # rescrobbled
 
+[![License](https://img.shields.io/github/license/InputUsername/rescrobbled)](https://github.com/InputUsername/rescrobbled/blob/master/LICENSE)
+[![Crates.io](https://img.shields.io/crates/v/rescrobbled)](https://crates.io/crates/rescrobbled)
+
 Rescrobbled is a music scrobbler daemon. It detects active media players running on D-Bus using `MPRIS`, automatically updates "now playing" status, and scrobbles songs to Last.fm or [ListenBrainz](https://listenbrainz.org) as they play.
 
 Among other things, due to sharing a Spotify account (I know, I know), I needed a way to scrobble to [Last.fm](https://last.fm) without connecting the Spotify account to my Last.fm account. Rescrobbled offers a simple solution for this.
@@ -7,6 +10,8 @@ Among other things, due to sharing a Spotify account (I know, I know), I needed 
 ## How to install and use
 
 You can download one of the prebuilt binaries [here](https://github.com/InputUsername/rescrobbled/releases). The binary can be placed anywhere you like.
+
+Rescrobbled is also available on [Crates.io](https://crates.io/crates/rescrobbled): `cargo install rescrobbled`
 
 Alternatively you can install from source using `cargo install --path .` from the crate root.
 
