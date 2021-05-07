@@ -45,6 +45,8 @@ The `filter-script` will be run before submitting tracks to Last.fm and/or Liste
 It receives the artist, song title and album name on consecutive lines of its standard input
 (in that order). The script should provide the filtered metadata on corresponding lines of its standard output.
 This can be used to clean up song names, for example removing "remastered" and similar suffixes.
+If the filter script does not return any output, the current track will be ignored.
+This allows you, for example, to prevent certain tracks or artists from being scrobbled.
 
 ### Running rescrobbled
 
