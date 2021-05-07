@@ -28,7 +28,7 @@ mod track;
 
 use config::ConfigError;
 
-const VERSION: &'static str = env!("CARGO_PKG_VERSION");
+const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 fn main() {
     if std::env::args().any(|arg| arg == "-v" || arg == "--version") {

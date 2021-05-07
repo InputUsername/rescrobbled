@@ -30,10 +30,7 @@ pub fn is_active(player: &Player) -> bool {
         return false;
     }
 
-    match player.get_playback_status() {
-        Ok(PlaybackStatus::Playing) => true,
-        _ => false,
-    }
+    matches!(player.get_playback_status(), Ok(PlaybackStatus::Playing))
 }
 
 /// Get the unique part of the DBUS bus name, ie. the part after `org.mpris.MediaPlayer2.`.

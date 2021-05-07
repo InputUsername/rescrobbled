@@ -44,8 +44,7 @@ impl Track {
         let artist = metadata
             .artists()
             .as_ref()
-            .and_then(|artists| artists.first())
-            .map(|&artist| artist)
+            .and_then(|artists| artists.first().copied())
             .unwrap_or("")
             .to_owned();
 
