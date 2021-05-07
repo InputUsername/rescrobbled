@@ -1489,7 +1489,7 @@ dependencies = [
 
 [[package]]
 name = "rescrobbled"
-version = "0.3.3"
+version = "0.4.0"
 dependencies = [
  "dirs 3.0.1",
  "listenbrainz-rust",

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.0 (2021-05-07)
+
+- Added ignore functionality for filter scripts:
+  - Filter scripts that return nothing will result in the current track to be ignored/not scrobbled
+  - This can be used to, for example, filter certain artists or songs entirely
+
 ## v0.3.3 (2021-05-06)
 
 - Added `-v` (`--version`) command-line switch to get the program's version
