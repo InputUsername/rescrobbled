@@ -2,85 +2,69 @@ use std::io::Write;
 use std::process::{Command, Stdio};
 
 use crate::config::Config;
+use crate::track::Track;
 
-pub fn filter_metadata(
-    config: &Config,
-    artist: &str,
-    title: &str,
-    album: &str,
-) -> Option<(String, String, String)> {
+#[derive(Debug, PartialEq)]
+pub enum FilterResult {
+    Filtered(Track),
+    NotFiltered(Track),
+    Ignored,
+}
+
+pub fn filter_metadata(config: &Config, track: Track) -> Result<FilterResult, String> {
     if config.filter_script.is_none() {
-        return None;
+        return Ok(FilterResult::NotFiltered(track));
     }
 
-    let child = Command::new(config.filter_script.as_ref().unwrap())
+    let mut child = Command::new(config.filter_script.as_ref().unwrap())
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
-        .spawn();
+        .spawn()
+        .map_err(|err| format!("Failed to run filter script: {}", err))?;
 
-    let mut child = match child {
-        Ok(child) => child,
-        Err(err) => {
-            eprintln!("Failed to run filter script: {}", err);
-            return None;
-        }
-    };
+    let mut stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| "Failed to get a stdin handle for the filter script".to_owned())?;
 
-    let stdin = child.stdin.take();
-    let mut stdin = if let Some(stdin) = stdin {
-        stdin
-    } else {
-        eprintln!("Failed to get a stdin handle for the filter script");
-        return None;
-    };
-
-    let buffer = format!("{}\n{}\n{}\n", artist, title, album);
-    if let Err(err) = stdin.write_all(buffer.as_bytes()) {
-        eprintln!("Failed to write metadata to filter script stdin: {}", err);
-        return None;
-    }
+    let buffer = format!("{}\n{}\n{}\n", track.artist(), track.title(), track.album());
+    stdin
+        .write_all(buffer.as_bytes())
+        .map_err(|err| format!("Failed to write metadata to filter script stdin: {}", err))?;
 
     // Close child's stdin to prevent endless waiting
     drop(stdin);
 
-    let output = match child.wait_with_output() {
-        Ok(output) => output,
-        Err(err) => {
-            eprintln!("Failed to retrieve output from filter script: {}", err);
-            return None;
-        }
-    };
+    let output = child
+        .wait_with_output()
+        .map_err(|err| format!("Failed to retrieve output from filter script: {}", err))?;
 
     if !output.status.success() {
-        eprint!("Filter script returned unsuccessfully ");
+        let mut message = "Filter script returned unsuccessfully ".to_owned();
         if let Some(status) = output.status.code() {
-            eprintln!("with status {}", status);
+            message += &format!("with status {}", status);
         } else {
-            eprintln!("without status");
+            message += "without status";
         }
 
         match String::from_utf8(output.stderr) {
-            Ok(output) => eprintln!("Stderr: {}", output),
-            Err(err) => eprintln!("Stderr is not UTF-8: {}", err),
+            Ok(output) => message += &format!("Stderr: {}", output),
+            Err(err) => message += &format!("Stderr is not UTF-8: {}", err),
         }
 
-        return None;
+        return Err(message);
     }
 
-    let output = match String::from_utf8(output.stdout) {
-        Ok(output) => output,
-        Err(err) => {
-            eprintln!("Filter script stdout is not UTF-8: {}", err);
-            return None;
-        }
-    };
+    let output = String::from_utf8(output.stdout)
+        .map_err(|err| format!("Filter script stdout is not UTF-8: {}", err))?;
 
     let mut output = output.split('\n');
-    Some((
-        output.next()?.to_string(),
-        output.next()?.to_string(),
-        output.next()?.to_string(),
-    ))
+    match (output.next(), output.next(), output.next()) {
+        (Some(artist), Some(title), Some(album)) => {
+            Ok(FilterResult::Filtered(Track::new(artist, title, album)))
+        }
+        _ => Ok(FilterResult::Ignored),
+    }
 }
 
 #[cfg(test)]
@@ -92,6 +76,10 @@ mod tests {
         use std::fs;
         use std::os::unix::fs::PermissionsExt;
 
+        let mut config = Config::default();
+        let temp_dir = tempfile::tempdir().unwrap();
+
+        let path = temp_dir.path().join("filter.sh");
         const FILTER_SCRIPT: &str = "#!/usr/bin/bash
 read artist
 read title
@@ -101,19 +89,46 @@ echo \"Title=$title\"
 echo \"Album=$album\"
 ";
 
-        let temp_dir = tempfile::tempdir().unwrap();
-        let path = temp_dir.path().join("filter.sh");
-
         fs::write(&path, FILTER_SCRIPT).unwrap();
         fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
 
-        let mut config = Config::default();
         config.filter_script = Some(path.to_string_lossy().into_owned());
 
-        let (artist, title, album) = filter_metadata(&config, "lorem", "ipsum", "dolor").unwrap();
+        assert_eq!(
+            filter_metadata(&config, Track::new("lorem", "ipsum", "dolor")),
+            Ok(FilterResult::Filtered(Track::new(
+                "Artist=lorem",
+                "Title=ipsum",
+                "Album=dolor"
+            )))
+        );
 
-        assert_eq!(artist, "Artist=lorem");
-        assert_eq!(title, "Title=ipsum");
-        assert_eq!(album, "Album=dolor");
+        // Script that produces no output should result in `FilterResult::Ignored`
+
+        let path_ignore = temp_dir.path().join("filter_ignore.sh");
+        const FILTER_SCRIPT_IGNORE: &str = "#!/usr/bin/bash
+true
+";
+
+        fs::write(&path_ignore, FILTER_SCRIPT_IGNORE).unwrap();
+        fs::set_permissions(&path_ignore, fs::Permissions::from_mode(0o755)).unwrap();
+
+        config.filter_script = Some(path_ignore.to_string_lossy().into_owned());
+
+        assert_eq!(
+            filter_metadata(&config, Track::new("lorem", "ipsum", "dolor")),
+            Ok(FilterResult::Ignored)
+        );
+
+        // Not using a filter script should result in `FilterResult::NotFiltered`
+
+        config.filter_script = None;
+
+        assert_eq!(
+            filter_metadata(&config, Track::new("lorem", "ipsum", "dolor")),
+            Ok(FilterResult::NotFiltered(Track::new(
+                "lorem", "ipsum", "dolor"
+            )))
+        );
     }
 }
