@@ -13,7 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use anyhow::{Context, Result, anyhow};
+use std::fmt;
+
+use anyhow::{Context, Result, anyhow, bail};
 
 use listenbrainz_rust::Listen;
 
@@ -75,9 +77,13 @@ impl Service {
                     .context("Failed to update status on Last.fm")?;
             }
             Self::ListenBrainz(token) => {
-                Listen::from(track).playing_now(token)
+                let status = Listen::from(track).playing_now(token)
                     .map_err(|err| anyhow!("{}", err))
                     .context("Failed to update status on ListenBrainz")?;
+
+                if !status.is_success() {
+                    bail!("Failed to update status on ListenBrainz");
+                }
             }
         }
         Ok(())
@@ -91,11 +97,24 @@ impl Service {
                     .context("Failed to submit track to Last.fm")?;
             }
             Self::ListenBrainz(token) => {
-                Listen::from(track).single(token)
+                let status = Listen::from(track).single(token)
                     .map_err(|err| anyhow!("{}", err))
                     .context("Failed to submit track to ListenBrainz")?;
+
+                if !status.is_success() {
+                    bail!("Failed to update status on ListenBrainz");
+                }
             }
         }
         Ok(())
+    }
+}
+
+impl fmt::Display for Service {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            Self::LastFM(_) => write!(f, "Last.fm"),
+            Self::ListenBrainz(_) => write!(f, "ListenBrainz"),
+        }
     }
 }
