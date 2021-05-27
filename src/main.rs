@@ -19,6 +19,7 @@ use anyhow::Result;
 
 mod config;
 mod filter;
+mod player;
 mod service;
 mod track;
 
