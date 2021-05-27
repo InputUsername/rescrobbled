@@ -36,7 +36,10 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<()> {
     } else {
         let mut input = String::new();
 
-        print!("Username: ");
+        print!(
+            "Log in to Last.fm\n\
+            Username: "
+        );
         io::stdout().flush()?;
 
         io::stdin().read_line(&mut input)?;
