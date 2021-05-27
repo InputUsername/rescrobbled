@@ -1,4 +1,4 @@
-// Copyright (C) 2019 Koen Bolhuis
+// Copyright (C) 2021 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,11 +14,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::collections::HashSet;
-use std::fmt;
 use std::fs;
-use std::io;
 use std::path::PathBuf;
 use std::time::Duration;
+
+use anyhow::{Context, Result, anyhow};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -42,7 +42,7 @@ fn serialize_duration_seconds<S: Serializer>(
     }
 }
 
-#[derive(Deserialize, Serialize, Default)]
+#[derive(Deserialize, Serialize, Default, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
     #[serde(alias = "api-key")]
@@ -65,19 +65,19 @@ pub struct Config {
 
     pub player_whitelist: Option<HashSet<String>>,
 
-    pub filter_script: Option<String>,
+    pub filter_script: Option<PathBuf>,
 }
 
 impl Config {
-    fn template() -> String {
-        let template = Self {
+    pub fn template() -> String {
+        let template = Config {
             lastfm_key: Some(String::new()),
             lastfm_secret: Some(String::new()),
             listenbrainz_token: Some(String::new()),
             enable_notifications: Some(false),
             min_play_time: Some(Duration::from_secs(0)),
             player_whitelist: Some(HashSet::new()),
-            filter_script: Some(String::new()),
+            filter_script: Some(PathBuf::new()),
         };
         toml::to_string(&template)
             .unwrap()
@@ -87,52 +87,35 @@ impl Config {
     }
 }
 
-#[derive(Debug)]
-pub enum ConfigError {
-    Io(io::Error),
-    Format(String),
-    Created(PathBuf),
-}
-
-impl fmt::Display for ConfigError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            ConfigError::Io(err) => write!(f, "{}", err),
-            ConfigError::Format(msg) => write!(f, "{}", msg),
-            ConfigError::Created(path) => {
-                write!(f, "Created config file at {}", path.to_string_lossy())
-            }
-        }
-    }
-}
-
-pub fn config_dir() -> Result<PathBuf, ConfigError> {
-    let mut path = dirs::config_dir().ok_or_else(|| {
-        ConfigError::Io(io::Error::new(
-            io::ErrorKind::NotFound,
-            "User config directory not found",
-        ))
-    })?;
+pub fn config_dir() -> Result<PathBuf> {
+    let mut path = dirs::config_dir()
+        .ok_or_else(|| anyhow!("User config directory does not exist"))?;
 
     path.push(CONFIG_DIR);
 
-    fs::create_dir_all(&path).map_err(ConfigError::Io)?;
+    if !path.exists() {
+        fs::create_dir_all(&path)
+            .context("Failed to create config directory")?;
+    }
 
     Ok(path)
 }
 
-pub fn load_config() -> Result<Config, ConfigError> {
+pub fn load_config() -> Result<Config> {
     let mut path = config_dir()?;
 
     path.push(CONFIG_FILE);
 
     if !path.exists() {
-        fs::write(&path, Config::template()).map_err(ConfigError::Io)?;
-        return Err(ConfigError::Created(path));
+        fs::write(&path, Config::template())
+            .context("Failed to create config template")?;
+
+        return Err(anyhow!("Config file did not exist, created it at {}", path.display()));
     }
 
-    let buffer = fs::read_to_string(&path).map_err(ConfigError::Io)?;
+    let buffer = fs::read_to_string(&path)
+        .context("Failed to open config file")?;
 
     toml::from_str(&buffer)
-        .map_err(|err| ConfigError::Format(format!("Could not parse config: {}", err)))
+        .context("Failed to parse config file")
 }
