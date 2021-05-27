@@ -19,6 +19,7 @@ use anyhow::Result;
 
 mod config;
 mod service;
+mod track;
 
 use config::load_config;
 use service::Service;
