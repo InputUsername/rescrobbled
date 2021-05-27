@@ -18,8 +18,10 @@
 use anyhow::Result;
 
 mod config;
+mod service;
 
 use config::load_config;
+use service::Service;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -29,7 +31,12 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    let _config = load_config()?;
+    let config = load_config()?;
+    let services = Service::initialize_all(&config)?;
+
+    if services.is_empty() {
+        eprintln!("Warning: no scrobbling services defined");
+    }
 
     Ok(())
 }
