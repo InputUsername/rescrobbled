@@ -19,6 +19,7 @@ use anyhow::Result;
 
 mod config;
 mod filter;
+mod mainloop;
 mod player;
 mod service;
 mod track;
@@ -41,5 +42,5 @@ fn main() -> Result<()> {
         eprintln!("Warning: no scrobbling services defined");
     }
 
-    Ok(())
+    mainloop::run(config, services)
 }
