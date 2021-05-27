@@ -18,6 +18,7 @@
 use anyhow::Result;
 
 mod config;
+mod filter;
 mod service;
 mod track;
 
