@@ -13,15 +13,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::fmt;
-
 use anyhow::{Context, Result, anyhow};
+
+use listenbrainz_rust::Listen;
 
 use rustfm_scrobble::Scrobbler;
 
 mod lastfm;
 
 use crate::config::Config;
+use crate::track::Track;
 
 /// Represents a music scrobbling service.
 pub enum Service {
@@ -64,5 +65,37 @@ impl Service {
         }
 
         Ok(services)
+    }
+
+    /// Submit a "now playing" request.
+    pub fn now_playing(&self, track: &Track) -> Result<()> {
+        match self {
+            Self::LastFM(scrobbler) => {
+                scrobbler.now_playing(&track.into())
+                    .context("Failed to update status on Last.fm")?;
+            }
+            Self::ListenBrainz(token) => {
+                Listen::from(track).playing_now(token)
+                    .map_err(|err| anyhow!("{}", err))
+                    .context("Failed to update status on ListenBrainz")?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Scrobble a track.
+    pub fn submit(&self, track: &Track) -> Result<()> {
+        match self {
+            Self::LastFM(scrobbler) => {
+                scrobbler.scrobble(&track.into())
+                    .context("Failed to submit track to Last.fm")?;
+            }
+            Self::ListenBrainz(token) => {
+                Listen::from(track).single(token)
+                    .map_err(|err| anyhow!("{}", err))
+                    .context("Failed to submit track to ListenBrainz")?;
+            }
+        }
+        Ok(())
     }
 }
