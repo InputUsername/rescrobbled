@@ -18,7 +18,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{Context, Result, anyhow, bail};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -110,7 +110,7 @@ pub fn load_config() -> Result<Config> {
         fs::write(&path, Config::template())
             .context("Failed to create config template")?;
 
-        return Err(anyhow!("Config file did not exist, created it at {}", path.display()));
+        bail!("Config file did not exist, created it at {}", path.display());
     }
 
     let buffer = fs::read_to_string(&path)
