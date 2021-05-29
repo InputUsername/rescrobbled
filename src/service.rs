@@ -82,6 +82,8 @@ impl Service {
                     .context("Failed to update status on ListenBrainz")?;
 
                 if !status.is_success() {
+                    // TODO: remove this check when a new ListenBrainz library is
+                    // used - error responses should not require checking the HTTP status
                     bail!("Failed to update status on ListenBrainz");
                 }
             }
@@ -102,7 +104,9 @@ impl Service {
                     .context("Failed to submit track to ListenBrainz")?;
 
                 if !status.is_success() {
-                    bail!("Failed to update status on ListenBrainz");
+                    // TODO: remove this check when a new ListenBrainz library is
+                    // used - error responses should not require checking the HTTP status
+                    bail!("Failed to submit track to ListenBrainz");
                 }
             }
         }
