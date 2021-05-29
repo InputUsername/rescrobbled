@@ -16,7 +16,7 @@
 use std::thread;
 use std::time::{Duration, Instant};
 
-use anyhow::{Context, Result, anyhow};
+use anyhow::{anyhow, Context, Result};
 
 use mpris::{PlaybackStatus, PlayerFinder};
 
@@ -127,7 +127,9 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                         | Ok(FilterResult::NotFiltered(track)) => {
                             for service in services.iter() {
                                 match service.submit(&track) {
-                                    Ok(()) => println!("Track submitted to {} successfully", service),
+                                    Ok(()) => {
+                                        println!("Track submitted to {} successfully", service)
+                                    }
                                     Err(err) => eprintln!("{}", err),
                                 }
                             }

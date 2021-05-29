@@ -16,7 +16,7 @@
 use std::io::Write;
 use std::process::{Command, Stdio};
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 
 use crate::config::Config;
 use crate::track::Track;
@@ -74,15 +74,15 @@ pub fn filter_metadata(config: &Config, track: Track) -> Result<FilterResult> {
         bail!(message);
     }
 
-    let output = String::from_utf8(output.stdout)
-        .context("Filter script stdout is not valid UTF-8")?;
+    let output =
+        String::from_utf8(output.stdout).context("Filter script stdout is not valid UTF-8")?;
 
     let mut output = output.split('\n');
     match (output.next(), output.next(), output.next()) {
         (Some(artist), Some(title), Some(album)) => {
             Ok(FilterResult::Filtered(Track::new(artist, title, album)))
         }
-        _ => Ok(FilterResult::Ignored)
+        _ => Ok(FilterResult::Ignored),
     }
 }
 
@@ -115,11 +115,7 @@ echo \"Album=$album\"
 
         assert_eq!(
             filter_metadata(&config, Track::new("lorem", "ipsum", "dolor")).unwrap(),
-            FilterResult::Filtered(Track::new(
-                "Artist=lorem",
-                "Title=ipsum",
-                "Album=dolor"
-            ))
+            FilterResult::Filtered(Track::new("Artist=lorem", "Title=ipsum", "Album=dolor"))
         );
 
         // Script that produces no output should result in `FilterResult::Ignored`
@@ -145,9 +141,7 @@ true
 
         assert_eq!(
             filter_metadata(&config, Track::new("lorem", "ipsum", "dolor")).unwrap(),
-            FilterResult::NotFiltered(Track::new(
-                "lorem", "ipsum", "dolor"
-            ))
+            FilterResult::NotFiltered(Track::new("lorem", "ipsum", "dolor"))
         );
     }
 }

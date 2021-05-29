@@ -18,7 +18,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::time::Duration;
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -88,14 +88,13 @@ impl Config {
 }
 
 pub fn config_dir() -> Result<PathBuf> {
-    let mut path = dirs::config_dir()
-        .ok_or_else(|| anyhow!("User config directory does not exist"))?;
+    let mut path =
+        dirs::config_dir().ok_or_else(|| anyhow!("User config directory does not exist"))?;
 
     path.push(CONFIG_DIR);
 
     if !path.exists() {
-        fs::create_dir_all(&path)
-            .context("Failed to create config directory")?;
+        fs::create_dir_all(&path).context("Failed to create config directory")?;
     }
 
     Ok(path)
@@ -107,15 +106,15 @@ pub fn load_config() -> Result<Config> {
     path.push(CONFIG_FILE);
 
     if !path.exists() {
-        fs::write(&path, Config::template())
-            .context("Failed to create config template")?;
+        fs::write(&path, Config::template()).context("Failed to create config template")?;
 
-        bail!("Config file did not exist, created it at {}", path.display());
+        bail!(
+            "Config file did not exist, created it at {}",
+            path.display()
+        );
     }
 
-    let buffer = fs::read_to_string(&path)
-        .context("Failed to open config file")?;
+    let buffer = fs::read_to_string(&path).context("Failed to open config file")?;
 
-    toml::from_str(&buffer)
-        .context("Failed to parse config file")
+    toml::from_str(&buffer).context("Failed to parse config file")
 }
