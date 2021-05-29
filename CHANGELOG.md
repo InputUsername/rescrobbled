@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 (WIP)
+
+- Internal refactoring
+  - Improved code quality
+  - Slightly improved error handling
+  - Made it easier to add new scrobbling services in the future
+
 ## 0.4.0 (2021-05-07)
 
 - Added ignore functionality for filter scripts:
