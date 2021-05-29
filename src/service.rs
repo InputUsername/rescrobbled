@@ -15,7 +15,7 @@
 
 use std::fmt;
 
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{anyhow, bail, Context, Result};
 
 use listenbrainz_rust::Listen;
 
@@ -29,7 +29,7 @@ use crate::track::Track;
 /// Represents a music scrobbling service.
 pub enum Service {
     LastFM(Scrobbler),
-    ListenBrainz(String)
+    ListenBrainz(String),
 }
 
 impl Service {
@@ -73,11 +73,13 @@ impl Service {
     pub fn now_playing(&self, track: &Track) -> Result<()> {
         match self {
             Self::LastFM(scrobbler) => {
-                scrobbler.now_playing(&track.into())
+                scrobbler
+                    .now_playing(&track.into())
                     .context("Failed to update status on Last.fm")?;
             }
             Self::ListenBrainz(token) => {
-                let status = Listen::from(track).playing_now(token)
+                let status = Listen::from(track)
+                    .playing_now(token)
                     .map_err(|err| anyhow!("{}", err))
                     .context("Failed to update status on ListenBrainz")?;
 
@@ -95,11 +97,13 @@ impl Service {
     pub fn submit(&self, track: &Track) -> Result<()> {
         match self {
             Self::LastFM(scrobbler) => {
-                scrobbler.scrobble(&track.into())
+                scrobbler
+                    .scrobble(&track.into())
                     .context("Failed to submit track to Last.fm")?;
             }
             Self::ListenBrainz(token) => {
-                let status = Listen::from(track).single(token)
+                let status = Listen::from(track)
+                    .single(token)
                     .map_err(|err| anyhow!("{}", err))
                     .context("Failed to submit track to ListenBrainz")?;
 
