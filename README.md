@@ -47,7 +47,8 @@ It receives the artist, song title and album name on consecutive lines of its st
 (in that order). The script should provide the filtered metadata on corresponding lines of its standard output.
 This can be used to clean up song names, for example removing "remastered" and similar suffixes.
 If the filter script does not return any output, the current track will be ignored.
-This allows you, for example, to prevent certain tracks or artists from being scrobbled.
+
+A number of example scripts can be found in the [`filter-script-examples`](https://github.com/InputUsername/rescrobbled/tree/master/filter-script-examples) directory.
 
 ### Running rescrobbled
 

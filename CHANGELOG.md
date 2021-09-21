@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.0 (unreleased)
+
+- Added a number of example filter scripts
+
 ## 0.4.0 (2021-05-07)
 
 - Added ignore functionality for filter scripts:
