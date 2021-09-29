@@ -13,7 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::fs;
+use std::fs::{self, Permissions};
+use std::os::unix::fs::PermissionsExt;
 use std::io::{self, Write};
 
 use anyhow::Result;
@@ -57,7 +58,8 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<()> {
 
         let session_response = scrobbler.authenticate_with_password(&username, &password)?;
 
-        let _ = fs::write(path, session_response.key);
+        let _ = fs::write(&path, session_response.key);
+        let _ = fs::set_permissions(&path, Permissions::from_mode(0o600));
     }
 
     Ok(())

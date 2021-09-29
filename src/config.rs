@@ -14,7 +14,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::collections::HashSet;
-use std::fs;
+use std::fs::{self, Permissions};
+use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 use std::time::Duration;
 
@@ -107,6 +108,8 @@ pub fn load_config() -> Result<Config> {
 
     if !path.exists() {
         fs::write(&path, Config::template()).context("Failed to create config template")?;
+        fs::set_permissions(&path, Permissions::from_mode(0o600))
+            .context("Failed to set permissions for config file")?;
 
         bail!(
             "Config file did not exist, created it at {}",
