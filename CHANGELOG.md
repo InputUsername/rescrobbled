@@ -6,7 +6,8 @@
 - Internal refactoring
   - Improved code quality
   - Slightly improved error handling
-  - Made it easier to add new scrobbling services in the future
+- The auto-generated config file and session token file are now created with
+  more restrictive permissions (`0600`)
 
 ## 0.4.0 (2021-05-07)
 
