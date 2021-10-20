@@ -8,6 +8,8 @@
   - Slightly improved error handling
 - The auto-generated config file and session token file are now created with
   more restrictive permissions (`0600`)
+- Cleaned up the README
+  - Also documented where the session token is stored
 
 ## 0.4.0 (2021-05-07)
 
