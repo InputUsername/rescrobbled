@@ -128,7 +128,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                             for service in services.iter() {
                                 match service.submit(&track) {
                                     Ok(()) => {
-                                        println!("Track submitted to {} successfully", service)
+                                        println!("Track submitted to {} successfully", service.name())
                                     }
                                     Err(err) => eprintln!("{}", err),
                                 }
@@ -179,7 +179,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                 Ok(FilterResult::Filtered(track)) | Ok(FilterResult::NotFiltered(track)) => {
                     for service in services.iter() {
                         match service.now_playing(&track) {
-                            Ok(()) => println!("Status updated on {} successfully", service),
+                            Ok(()) => println!("Status updated on {} successfully", service.name()),
                             Err(err) => eprintln!("{}", err),
                         }
                     }

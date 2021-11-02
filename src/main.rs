@@ -36,11 +36,7 @@ fn main() -> Result<()> {
     }
 
     let config = load_config()?;
-    let services = Service::initialize_all(&config)?;
-
-    if services.is_empty() {
-        eprintln!("Warning: no scrobbling services defined");
-    }
+    let services = Service::initialize_all(&config);
 
     mainloop::run(config, services)
 }

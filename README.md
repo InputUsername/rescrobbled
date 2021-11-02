@@ -24,32 +24,36 @@ Rescrobbled expects a configuration file at `~/.config/rescrobbled/config.toml` 
 ```toml
 lastfm-key = "Last.fm API key"
 lastfm-secret = "Last.fm API secret"
-listenbrainz-token = "ListenBrainz user token"
 enable-notifications = false
 min-play-time = 0
 player-whitelist = [ "Player MPRIS identity or bus name" ]
 filter-script = "path/to/script"
+
+[[listenbrainz]]
+name = "Custom name"
+url = "Custom API URL"
+token = "User token"
 ```
 
 All settings are optional, although rescrobbled isn't very useful without Last.fm or ListenBrainz credentials. ;-)
 
-If the config file doesn't exist, rescrobbled will generate an example config for you.
+If the config file doesn't exist, rescrobbled will generate an example config for you when you run it for the first time.
 
-### `lastfm-key`, `lastfm-secret`, `listenbrainz-token`
+`lastfm-key`, `lastfm-secret`
 
-To use rescrobbled with Last.fm, you'll need a Last.fm API key and secret. These can be obtained [here](https://www.last.fm/api/account/create). To use ListenBrainz, you'll need a user token which can be found [here](https://listenbrainz.org/profile/).
+To use rescrobbled with Last.fm, you'll need a Last.fm API key and secret. These can be obtained [here](https://www.last.fm/api/account/create).
 
-### `enable-notifications`
+`enable-notifications`
 
 Set this to `true` to show desktop notifications when a song starts playing: useful if your music player does not support notifications. Defaults to `false`.
 
-### `min-play-time`
+`min-play-time`
 
 Minimum play time in seconds before a song is scrobbled.
 
 By default, track submission respects Last.fm's recommended behavior: songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using `min-play-time` you can override this.
 
-### `player-whitelist`
+`player-whitelist`
 
 If empty or ommitted, music from all players will be scrobbled; otherwise, rescrobbled will only listen to players in this list.
 
@@ -58,15 +62,25 @@ A CLI application like `playerctl` can be used to determine a player's MPRIS ide
 playerctl --list-all
 ```
 
-### `filter-script`
+`filter-script`
 
-The `filter-script` will be run before submitting tracks to Last.fm and/or ListenBrainz.
+The `filter-script` will be run before submitting tracks.
 It receives the artist, song title and album name on consecutive lines of its standard input
 (in that order). The script should provide the filtered metadata on corresponding lines of its standard output.
 This can be used to clean up song names, for example removing "remastered" and similar suffixes.
 If the filter script does not return any output, the current track will be ignored.
 
 A number of example scripts can be found in the [`filter-script-examples`](https://github.com/InputUsername/rescrobbled/tree/master/filter-script-examples) directory.
+
+`[[listenbrainz]]`
+
+You can specify one or more ListenBrainz instances by repeating this option. Each definition needs at least a `token`. You can set `name` to something recognisable for clearer output, and you can set `url` to use a custom API URL (eg. for use with custom ListenBrainz instances or services like [Maloja](https://github.com/krateng/maloja)). If the name is left out, it defaults to ListenBrainz. If the URL is not provided, it defaults to the ListenBrainz.org instance.
+
+If you only want to use ListenBrainz.org, you can also simply set the `listenbrainz-token` option as a shorthand.
+
+For ListenBrainz.org, the user token can be found [here](https://listenbrainz.org/profile/). Other services might do this differently, refer to their documentation for more info.
+
+*Note: due to the way [TOML](https://toml.io) works, these need to be the last thing in your config file.*
 
 ## Usage
 

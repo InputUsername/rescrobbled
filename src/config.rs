@@ -44,6 +44,13 @@ fn serialize_duration_seconds<S: Serializer>(
 }
 
 #[derive(Deserialize, Serialize, Default, Debug)]
+pub struct ListenBrainzConfig {
+    pub name: Option<String>,
+    pub url: Option<String>,
+    pub token: String,
+}
+
+#[derive(Deserialize, Serialize, Default, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
     #[serde(alias = "api-key")]
@@ -67,6 +74,8 @@ pub struct Config {
     pub player_whitelist: Option<HashSet<String>>,
 
     pub filter_script: Option<PathBuf>,
+
+    pub listenbrainz: Option<Vec<ListenBrainzConfig>>,
 }
 
 impl Config {
@@ -74,17 +83,39 @@ impl Config {
         let template = Config {
             lastfm_key: Some(String::new()),
             lastfm_secret: Some(String::new()),
-            listenbrainz_token: Some(String::new()),
+            listenbrainz_token: None,
             enable_notifications: Some(false),
             min_play_time: Some(Duration::from_secs(0)),
             player_whitelist: Some(HashSet::new()),
             filter_script: Some(PathBuf::new()),
+            listenbrainz: Some(vec![ListenBrainzConfig {
+                name: Some(String::new()),
+                url: Some(String::new()),
+                token: String::new(),
+            }]),
         };
         toml::to_string(&template)
             .unwrap()
             .lines()
             .map(|l| format!("# {}\n", l))
             .collect()
+    }
+
+    fn normalize(&mut self) {
+        // Turn `listenbrainz-token` into a `[[listenbrainz]]` definition
+        if self.listenbrainz_token.is_some() {
+            if self.listenbrainz.is_none() {
+                self.listenbrainz = Some(vec![ListenBrainzConfig {
+                    name: None,
+                    url: None,
+                    token: self.listenbrainz_token.take().unwrap(),
+                }])
+            } else {
+                eprintln!("Warning: both listenbrainz-token and [[listenbrainz]] config options are defined (listenbrainz-token will be ignored)");
+            }
+
+            self.listenbrainz_token.take();
+        }
     }
 }
 
@@ -119,5 +150,54 @@ pub fn load_config() -> Result<Config> {
 
     let buffer = fs::read_to_string(&path).context("Failed to open config file")?;
 
-    toml::from_str(&buffer).context("Failed to parse config file")
+    let mut config: Config = toml::from_str(&buffer).context("Failed to parse config file")?;
+
+    config.normalize();
+
+    Ok(config)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_normalize_empty_config() {
+        let mut config = Config::default();
+        config.normalize();
+
+        assert!(config.listenbrainz_token.is_none());
+        assert!(config.listenbrainz.is_none());
+    }
+
+    #[test]
+    fn test_normalize_listenbrainz_token() {
+        let mut config = Config::default();
+        config.listenbrainz_token = Some("TEST TOKEN".to_string());
+        config.normalize();
+
+        assert!(config.listenbrainz_token.is_none());
+        assert!(config.listenbrainz.is_some());
+        assert!(
+            matches!(
+                &config.listenbrainz.unwrap()[..],
+                [ListenBrainzConfig { name: None, url: None, token }] if token == "TEST TOKEN"
+            )
+        );
+    }
+
+    #[test]
+    fn test_normalize_listenbrainz_double() {
+        let mut config = Config::default();
+        config.listenbrainz_token = Some("TEST TOKEN".to_string());
+        config.listenbrainz = Some(vec![ListenBrainzConfig {
+            name: None,
+            url: None,
+            token: "SECOND TEST TOKEN".to_string(),
+        }]);
+        config.normalize();
+
+        assert!(config.listenbrainz_token.is_none());
+        assert!(config.listenbrainz.is_some());
+    }
 }
