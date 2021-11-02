@@ -2,12 +2,15 @@
 
 ## v0.5.0 (unreleased)
 
+- Added support for multiple ListenBrainz instances
+  - You can now specify multiple ListenBrainz instances, supporting custom installs
+    and other scrobbling services that use a ListenBrainz compatible API
 - Added a number of example filter scripts
+- The auto-generated config file and session token file are now created with
+  more restrictive permissions (`0600`)
 - Internal refactoring
   - Improved code quality
   - Slightly improved error handling
-- The auto-generated config file and session token file are now created with
-  more restrictive permissions (`0600`)
 - Cleaned up the README
   - Also documented where the session token is stored
 
