@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use std::fmt;
+
 use anyhow::{anyhow, Context, Result};
 
 use listenbrainz::ListenBrainz;
@@ -28,8 +30,8 @@ use crate::track::Track;
 pub enum Service {
     LastFM(Scrobbler),
     ListenBrainz {
-        name: Option<String>,
         client: ListenBrainz,
+        is_default: bool,
     },
 }
 
@@ -58,9 +60,15 @@ impl Service {
         };
 
         client.authenticate(&lb.token)
-            .with_context(|| format!("Failed to authenticate with {}", lb.name.as_deref().unwrap_or("ListenBrainz")))?;
+            .with_context(|| {
+                let mut err = "Failed to authenticate with ListenBrainz".to_owned();
+                if let Some(ref url) = lb.url {
+                    err += &format!(" ({})", url);
+                }
+                err
+            })?;
 
-        Ok(Self::ListenBrainz { name: lb.name.clone(), client })
+        Ok(Self::ListenBrainz { is_default: lb.url.is_none(), client })
     }
 
     /// Initialize all services specified in the config.
@@ -69,7 +77,7 @@ impl Service {
 
         match Self::lastfm(config) {
             Ok(Some(lastfm)) => {
-                println!("Authenticated with {} successfully!", lastfm.name());
+                println!("Authenticated with {} successfully!", lastfm);
                 services.push(lastfm);
             }
             Err(err) => eprintln!("{}", err),
@@ -79,7 +87,7 @@ impl Service {
         for lb in config.listenbrainz.iter().flatten() {
             match Self::listenbrainz(lb) {
                 Ok(service) => {
-                    println!("Authenticated with {} successfully!", service.name());
+                    println!("Authenticated with {} successfully!", service);
                     services.push(service);
                 }
                 Err(err) => eprintln!("{}", err),
@@ -99,12 +107,12 @@ impl Service {
             Self::LastFM(scrobbler) => {
                 scrobbler
                     .now_playing(&track.into())
-                    .with_context(|| format!("Failed to update status on {}", self.name()))?;
+                    .with_context(|| format!("Failed to update status on {}", self))?;
             }
             Self::ListenBrainz { client, .. } => {
                 client
                     .playing_now(track.artist(), track.title(), track.album())
-                    .with_context(|| format!("Failed to update status on {}", self.name()))?;
+                    .with_context(|| format!("Failed to update status on {}", self))?;
             }
         }
         Ok(())
@@ -116,21 +124,29 @@ impl Service {
             Self::LastFM(scrobbler) => {
                 scrobbler
                     .scrobble(&track.into())
-                    .with_context(|| format!("Failed to submit track to {}", self.name()))?;
+                    .with_context(|| format!("Failed to submit track to {}", self))?;
             }
             Self::ListenBrainz { client, .. } => {
                 client
                     .listen(track.artist(), track.title(), track.album())
-                    .with_context(|| format!("Failed to submit track to {}", self.name()))?;
+                    .with_context(|| format!("Failed to submit track to {}", self))?;
             }
         }
         Ok(())
     }
+}
 
-    pub fn name(&self) -> &str {
+impl fmt::Display for Service {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::LastFM(_) => "Last.fm",
-            Self::ListenBrainz { name, .. } => name.as_deref().unwrap_or("ListenBrainz"),
+            Self::LastFM(_) => write!(f, "Last.fm"),
+            Self::ListenBrainz { client, is_default } => {
+                write!(f, "ListenBrainz")?;
+                if !is_default {
+                    write!(f, " ({})", client.api_url())?;
+                }
+                Ok(())
+            }
         }
     }
 }

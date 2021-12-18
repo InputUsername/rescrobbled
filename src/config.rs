@@ -45,7 +45,6 @@ fn serialize_duration_seconds<S: Serializer>(
 
 #[derive(Deserialize, Serialize, Default, Debug)]
 pub struct ListenBrainzConfig {
-    pub name: Option<String>,
     pub url: Option<String>,
     pub token: String,
 }
@@ -89,7 +88,6 @@ impl Config {
             player_whitelist: Some(HashSet::new()),
             filter_script: Some(PathBuf::new()),
             listenbrainz: Some(vec![ListenBrainzConfig {
-                name: Some(String::new()),
                 url: Some(String::new()),
                 token: String::new(),
             }]),
@@ -106,7 +104,6 @@ impl Config {
         if self.listenbrainz_token.is_some() {
             if self.listenbrainz.is_none() {
                 self.listenbrainz = Some(vec![ListenBrainzConfig {
-                    name: None,
                     url: None,
                     token: self.listenbrainz_token.take().unwrap(),
                 }])
@@ -181,7 +178,7 @@ mod tests {
         assert!(
             matches!(
                 &config.listenbrainz.unwrap()[..],
-                [ListenBrainzConfig { name: None, url: None, token }] if token == "TEST TOKEN"
+                [ListenBrainzConfig { url: None, token }] if token == "TEST TOKEN"
             )
         );
     }
@@ -191,7 +188,6 @@ mod tests {
         let mut config = Config::default();
         config.listenbrainz_token = Some("TEST TOKEN".to_string());
         config.listenbrainz = Some(vec![ListenBrainzConfig {
-            name: None,
             url: None,
             token: "SECOND TEST TOKEN".to_string(),
         }]);

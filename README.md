@@ -30,7 +30,6 @@ player-whitelist = [ "Player MPRIS identity or bus name" ]
 filter-script = "path/to/script"
 
 [[listenbrainz]]
-name = "Custom name"
 url = "Custom API URL"
 token = "User token"
 ```
@@ -74,13 +73,13 @@ A number of example scripts can be found in the [`filter-script-examples`](https
 
 `[[listenbrainz]]`
 
-You can specify one or more ListenBrainz instances by repeating this option. Each definition needs at least a `token`. You can set `name` to something recognisable for clearer output, and you can set `url` to use a custom API URL (eg. for use with custom ListenBrainz instances or services like [Maloja](https://github.com/krateng/maloja)). If the name is left out, it defaults to ListenBrainz. If the URL is not provided, it defaults to the ListenBrainz.org instance.
+You can specify one or more ListenBrainz instances by repeating this option. Each definition needs at least a `token`. You can set `url` to use a custom API URL (eg. for use with custom ListenBrainz instances or services like [Maloja](https://github.com/krateng/maloja)). If the URL is not provided, it defaults to the ListenBrainz.org instance.
 
-If you only want to use ListenBrainz.org, you can also simply set the `listenbrainz-token` option as a shorthand.
+If you only want to use ListenBrainz.org, you can set the `listenbrainz-token` option as a shorthand instead.
 
 For ListenBrainz.org, the user token can be found [here](https://listenbrainz.org/profile/). Other services might do this differently, refer to their documentation for more info.
 
-*Note: due to the way [TOML](https://toml.io) works, these need to be the last thing in your config file.*
+*Note: due to the way TOML works, these need to be the last thing in your config file.*
 
 ## Usage
 
