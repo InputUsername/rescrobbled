@@ -531,9 +531,9 @@ dependencies = [
 
 [[package]]
 name = "listenbrainz"
-version = "0.4.0"
+version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e276c68189e1e0a19b98852fc56099dcae02d69ea9f8b89c7a7d82861c430ebe"
+checksum = "1e68f9e448e853000901fdfec45583cb816e1db34dbb9d9ae6e9b2cd832a0893"
 dependencies = [
  "attohttpc",
  "serde",
