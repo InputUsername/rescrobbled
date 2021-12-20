@@ -88,6 +88,9 @@ systemctl --user start rescrobbled.service
 - [Changelog](https://github.com/InputUsername/rescrobbled/blob/master/CHANGELOG.md)
 - [Releases](https://github.com/InputUsername/rescrobbled/releases)
 
+Issues and pull requests are more than welcome! Development happens on the [`development`](https://github.com/InputUsername/rescrobbled/tree/development) branch, so please create PRs against that.
+All contributions will be licensed under GPLv3.
+
 ## License
 
 GPL-3.0, see [`LICENSE`](https://github.com/InputUsername/rescrobbled/blob/master/LICENSE).
