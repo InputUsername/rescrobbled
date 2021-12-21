@@ -107,21 +107,21 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
 
         let current_track = Track::from_metadata(&metadata);
 
-        let length = match metadata.length() {
-            Some(length) => length,
-            None => {
-                eprintln!("Failed to get track length");
-
-                thread::sleep(POLL_INTERVAL);
-                continue;
+        let length = if let Some(lenght) = metadata.length() {
+            if lenght.is_zero() {
+                None
+            } else {
+                Some(lenght)
             }
+        } else {
+            None
         };
 
         if current_track == previous_track {
             if !scrobbled_current_song {
-                let min_play_time = get_min_play_time(&config, length);
+                let min_play_time = get_min_play_time(&config, length.unwrap_or(MIN_LENGTH));
 
-                if length > MIN_LENGTH && current_play_time > min_play_time {
+                if length.map(|length| length > MIN_LENGTH).unwrap_or(true) && current_play_time > min_play_time {
                     match filter_metadata(&config, current_track) {
                         Ok(FilterResult::Filtered(track))
                         | Ok(FilterResult::NotFiltered(track)) => {
@@ -140,7 +140,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
 
                     scrobbled_current_song = true;
                 }
-            } else if current_play_time >= length {
+            } else if length.map(|length| length < current_play_time).unwrap_or(false) {
                 current_play_time = Duration::from_secs(0);
                 scrobbled_current_song = false;
             }
