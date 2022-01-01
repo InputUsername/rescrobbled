@@ -107,11 +107,11 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
 
         let current_track = Track::from_metadata(&metadata);
 
-        let length = if let Some(lenght) = metadata.length() {
-            if lenght.is_zero() {
+        let length = if let Some(length) = metadata.length() {
+            if length.is_zero() {
                 None
             } else {
-                Some(lenght)
+                Some(length)
             }
         } else {
             None
@@ -140,7 +140,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
 
                     scrobbled_current_song = true;
                 }
-            } else if length.map(|length| length < current_play_time).unwrap_or(false) {
+            } else if length.map(|length| current_play_time >= length).unwrap_or(false) {
                 current_play_time = Duration::from_secs(0);
                 scrobbled_current_song = false;
             }
