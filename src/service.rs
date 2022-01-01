@@ -15,25 +15,28 @@
 
 use std::fmt;
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{anyhow, Context, Result};
 
-use listenbrainz_rust::Listen;
+use listenbrainz::ListenBrainz;
 
 use rustfm_scrobble::Scrobbler;
 
 mod lastfm;
 
-use crate::config::Config;
+use crate::config::{Config, ListenBrainzConfig};
 use crate::track::Track;
 
 /// Represents a music scrobbling service.
 pub enum Service {
     LastFM(Scrobbler),
-    ListenBrainz(String),
+    ListenBrainz {
+        client: ListenBrainz,
+        is_default: bool,
+    },
 }
 
 impl Service {
-    /// Initialize Last.fm.
+    /// Try to connect to Last.fm.
     fn lastfm(config: &Config) -> Result<Option<Self>> {
         match (&config.lastfm_key, &config.lastfm_secret) {
             (Some(key), Some(secret)) => {
@@ -49,24 +52,53 @@ impl Service {
         }
     }
 
-    /// Initialize ListenBrainz.
-    fn listenbrainz(config: &Config) -> Option<Self> {
-        config.listenbrainz_token.clone().map(Self::ListenBrainz)
+    /// Try to connect to a ListenBrainz instance.
+    fn listenbrainz(lb: &ListenBrainzConfig) -> Result<Self> {
+        let mut client = match lb.url {
+            Some(ref url) => ListenBrainz::new_with_url(url),
+            None => ListenBrainz::new(),
+        };
+
+        client.authenticate(&lb.token)
+            .with_context(|| {
+                let mut err = "Failed to authenticate with ListenBrainz".to_owned();
+                if let Some(ref url) = lb.url {
+                    err += &format!(" ({})", url);
+                }
+                err
+            })?;
+
+        Ok(Self::ListenBrainz { is_default: lb.url.is_none(), client })
     }
 
     /// Initialize all services specified in the config.
-    pub fn initialize_all(config: &Config) -> Result<Vec<Self>> {
+    pub fn initialize_all(config: &Config) -> Vec<Self> {
         let mut services = Vec::new();
 
-        if let Some(lastfm) = Self::lastfm(config)? {
-            services.push(lastfm);
-            println!("Authenticated with Last.fm successfully!");
-        }
-        if let Some(listenbrainz) = Self::listenbrainz(config) {
-            services.push(listenbrainz);
+        match Self::lastfm(config) {
+            Ok(Some(lastfm)) => {
+                println!("Authenticated with {} successfully!", lastfm);
+                services.push(lastfm);
+            }
+            Err(err) => eprintln!("{}", err),
+            _ => {}
         }
 
-        Ok(services)
+        for lb in config.listenbrainz.iter().flatten() {
+            match Self::listenbrainz(lb) {
+                Ok(service) => {
+                    println!("Authenticated with {} successfully!", service);
+                    services.push(service);
+                }
+                Err(err) => eprintln!("{}", err),
+            }
+        }
+
+        if services.is_empty() {
+            eprintln!("Warning: no scrobbling services defined");
+        }
+
+        services
     }
 
     /// Submit a "now playing" request.
@@ -75,19 +107,12 @@ impl Service {
             Self::LastFM(scrobbler) => {
                 scrobbler
                     .now_playing(&track.into())
-                    .context("Failed to update status on Last.fm")?;
+                    .with_context(|| format!("Failed to update status on {}", self))?;
             }
-            Self::ListenBrainz(token) => {
-                let status = Listen::from(track)
-                    .playing_now(token)
-                    .map_err(|err| anyhow!("{}", err))
-                    .context("Failed to update status on ListenBrainz")?;
-
-                if !status.is_success() {
-                    // TODO: remove this check when a new ListenBrainz library is
-                    // used - error responses should not require checking the HTTP status
-                    bail!("Failed to update status on ListenBrainz");
-                }
+            Self::ListenBrainz { client, .. } => {
+                client
+                    .playing_now(track.artist(), track.title(), track.album())
+                    .with_context(|| format!("Failed to update status on {}", self))?;
             }
         }
         Ok(())
@@ -99,19 +124,12 @@ impl Service {
             Self::LastFM(scrobbler) => {
                 scrobbler
                     .scrobble(&track.into())
-                    .context("Failed to submit track to Last.fm")?;
+                    .with_context(|| format!("Failed to submit track to {}", self))?;
             }
-            Self::ListenBrainz(token) => {
-                let status = Listen::from(track)
-                    .single(token)
-                    .map_err(|err| anyhow!("{}", err))
-                    .context("Failed to submit track to ListenBrainz")?;
-
-                if !status.is_success() {
-                    // TODO: remove this check when a new ListenBrainz library is
-                    // used - error responses should not require checking the HTTP status
-                    bail!("Failed to submit track to ListenBrainz");
-                }
+            Self::ListenBrainz { client, .. } => {
+                client
+                    .listen(track.artist(), track.title(), track.album())
+                    .with_context(|| format!("Failed to submit track to {}", self))?;
             }
         }
         Ok(())
@@ -119,10 +137,16 @@ impl Service {
 }
 
 impl fmt::Display for Service {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::LastFM(_) => write!(f, "Last.fm"),
-            Self::ListenBrainz(_) => write!(f, "ListenBrainz"),
+            Self::ListenBrainz { client, is_default } => {
+                write!(f, "ListenBrainz")?;
+                if !is_default {
+                    write!(f, " ({})", client.api_url())?;
+                }
+                Ok(())
+            }
         }
     }
 }

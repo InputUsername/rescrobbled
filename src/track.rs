@@ -17,8 +17,6 @@ use mpris::Metadata;
 
 use rustfm_scrobble::Scrobble;
 
-use listenbrainz_rust::Listen;
-
 #[derive(Debug, Default, PartialEq)]
 pub struct Track {
     artist: String,
@@ -82,15 +80,5 @@ impl Track {
 impl From<&Track> for Scrobble {
     fn from(track: &Track) -> Scrobble {
         Scrobble::new(track.artist(), track.title(), track.album())
-    }
-}
-
-impl<'a> From<&'a Track> for Listen<'a> {
-    fn from(track: &'a Track) -> Listen<'a> {
-        Listen {
-            artist: track.artist(),
-            track: track.title(),
-            album: track.album(),
-        }
     }
 }
