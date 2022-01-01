@@ -9,7 +9,10 @@
 - The auto-generated config file and session token file are now created with
   more restrictive permissions (`0600`)
 - Cleaned up the README
-  - Also documented where the session token is stored
+- Documented where the session token is stored
+- Added fallback behavior when a player does not report track length:
+  - Tracks will scrobble after the default minimum track length (30 seconds)
+  - Tracks will only scrobble once, unless paused and then unpaused
 
 ## 0.4.0 (2021-05-07)
 
