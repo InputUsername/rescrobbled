@@ -59,16 +59,18 @@ impl Service {
             None => ListenBrainz::new(),
         };
 
-        client.authenticate(&lb.token)
-            .with_context(|| {
-                let mut err = "Failed to authenticate with ListenBrainz".to_owned();
-                if let Some(ref url) = lb.url {
-                    err += &format!(" ({})", url);
-                }
-                err
-            })?;
+        client.authenticate(&lb.token).with_context(|| {
+            let mut err = "Failed to authenticate with ListenBrainz".to_owned();
+            if let Some(ref url) = lb.url {
+                err += &format!(" ({})", url);
+            }
+            err
+        })?;
 
-        Ok(Self::ListenBrainz { is_default: lb.url.is_none(), client })
+        Ok(Self::ListenBrainz {
+            is_default: lb.url.is_none(),
+            client,
+        })
     }
 
     /// Initialize all services specified in the config.

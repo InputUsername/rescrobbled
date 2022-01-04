@@ -175,12 +175,10 @@ mod tests {
 
         assert!(config.listenbrainz_token.is_none());
         assert!(config.listenbrainz.is_some());
-        assert!(
-            matches!(
-                &config.listenbrainz.unwrap()[..],
-                [ListenBrainzConfig { url: None, token }] if token == "TEST TOKEN"
-            )
-        );
+        assert!(matches!(
+            &config.listenbrainz.unwrap()[..],
+            [ListenBrainzConfig { url: None, token }] if token == "TEST TOKEN"
+        ));
     }
 
     #[test]

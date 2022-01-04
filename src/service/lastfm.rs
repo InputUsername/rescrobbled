@@ -14,8 +14,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::fs::{self, Permissions};
-use std::os::unix::fs::PermissionsExt;
 use std::io::{self, Write};
+use std::os::unix::fs::PermissionsExt;
 
 use anyhow::Result;
 

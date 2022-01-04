@@ -121,7 +121,9 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
             if !scrobbled_current_song {
                 let min_play_time = get_min_play_time(&config, length.unwrap_or(MIN_LENGTH));
 
-                if length.map(|length| length > MIN_LENGTH).unwrap_or(true) && current_play_time > min_play_time {
+                if length.map(|length| length > MIN_LENGTH).unwrap_or(true)
+                    && current_play_time > min_play_time
+                {
                     match filter_metadata(&config, current_track) {
                         Ok(FilterResult::Filtered(track))
                         | Ok(FilterResult::NotFiltered(track)) => {
@@ -140,7 +142,10 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
 
                     scrobbled_current_song = true;
                 }
-            } else if length.map(|length| current_play_time >= length).unwrap_or(false) {
+            } else if length
+                .map(|length| current_play_time >= length)
+                .unwrap_or(false)
+            {
                 current_play_time = Duration::from_secs(0);
                 scrobbled_current_song = false;
             }
