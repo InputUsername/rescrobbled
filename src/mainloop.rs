@@ -156,7 +156,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
 
             if config.enable_notifications.unwrap_or(false) {
                 Notification::new()
-                    .summary(&current_track.title())
+                    .summary(current_track.title())
                     .body(&format!(
                         "{} - {}",
                         current_track.artist(),
