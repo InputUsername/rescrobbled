@@ -46,6 +46,8 @@ fn bus_name<'p>(player: &'p Player) -> &'p str {
         .unwrap() // Unwrap is fine; split returns the whole string if no '.' present
 }
 
+/// Determine if a player's MPRIS identity or the unique part
+/// of its D-Bus bus name are whitelisted.
 fn is_whitelisted(config: &Config, player: &Player) -> bool {
     if let Some(ref whitelist) = config.player_whitelist {
         if !whitelist.is_empty() {

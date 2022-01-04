@@ -1,4 +1,4 @@
-// Copyright (C) 2019 Koen Bolhuis
+// Copyright (C) 2021 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,18 +13,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use listenbrainz_rust::Listen;
-use mpris::{PlaybackStatus, PlayerFinder};
-use notify_rust::{Notification, Timeout};
-use rustfm_scrobble::{Scrobble, Scrobbler};
-
-use std::process;
 use std::thread;
 use std::time::{Duration, Instant};
+
+use anyhow::{anyhow, Context, Result};
+
+use mpris::{PlaybackStatus, PlayerFinder};
+
+use notify_rust::{Notification, Timeout};
 
 use crate::config::Config;
 use crate::filter::{filter_metadata, FilterResult};
 use crate::player;
+use crate::service::Service;
 use crate::track::Track;
 
 const POLL_INTERVAL: Duration = Duration::from_millis(500);
@@ -32,7 +33,9 @@ const POLL_INTERVAL: Duration = Duration::from_millis(500);
 const MIN_LENGTH: Duration = Duration::from_secs(30);
 const MIN_PLAY_TIME: Duration = Duration::from_secs(4 * 60);
 
-fn get_min_play_time(track_length: Duration, config: &Config) -> Duration {
+const NOTIFICATION_TIMEOUT: Timeout = Timeout::Milliseconds(6000);
+
+fn get_min_play_time(config: &Config, track_length: Duration) -> Duration {
     config.min_play_time.unwrap_or_else(|| {
         if (track_length / 2) < MIN_PLAY_TIME {
             track_length / 2
@@ -42,14 +45,10 @@ fn get_min_play_time(track_length: Duration, config: &Config) -> Duration {
     })
 }
 
-pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
-    let finder = match PlayerFinder::new() {
-        Ok(finder) => finder,
-        Err(err) => {
-            eprintln!("Failed to connect to D-Bus: {}", err);
-            process::exit(1);
-        }
-    };
+pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
+    let finder = PlayerFinder::new()
+        .map_err(|err| anyhow!("{}", err))
+        .context("Failed to connect to D-Bus")?;
 
     println!("Looking for an active MPRIS player...");
 
@@ -66,7 +65,8 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
     loop {
         if !player::is_active(&player) {
             println!(
-                "Player {} stopped, looking for a new MPRIS player...",
+                "----\n\
+                Player {} stopped, looking for a new MPRIS player...",
                 player.identity()
             );
 
@@ -107,52 +107,32 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
 
         let current_track = Track::from_metadata(&metadata);
 
-        let length = match metadata.length() {
-            Some(length) => length,
-            None => {
-                eprintln!("Failed to get track length");
-
-                thread::sleep(POLL_INTERVAL);
-                continue;
+        let length = if let Some(length) = metadata.length() {
+            if length.is_zero() {
+                None
+            } else {
+                Some(length)
             }
+        } else {
+            None
         };
 
         if current_track == previous_track {
             if !scrobbled_current_song {
-                let min_play_time = get_min_play_time(length, &config);
+                let min_play_time = get_min_play_time(&config, length.unwrap_or(MIN_LENGTH));
 
-                if length > MIN_LENGTH && current_play_time > min_play_time {
+                if length.map(|length| length > MIN_LENGTH).unwrap_or(true)
+                    && current_play_time > min_play_time
+                {
                     match filter_metadata(&config, current_track) {
                         Ok(FilterResult::Filtered(track))
                         | Ok(FilterResult::NotFiltered(track)) => {
-                            if let Some(ref scrobbler) = scrobbler {
-                                let scrobble =
-                                    Scrobble::new(track.artist(), track.title(), track.album());
-
-                                match scrobbler.scrobble(&scrobble) {
-                                    Ok(_) => println!("Track submitted to Last.fm successfully"),
-                                    Err(err) => {
-                                        eprintln!("Failed to submit track to Last.fm: {}", err)
+                            for service in services.iter() {
+                                match service.submit(&track) {
+                                    Ok(()) => {
+                                        println!("Track submitted to {} successfully", service)
                                     }
-                                }
-                            }
-
-                            if let Some(ref token) = config.listenbrainz_token {
-                                let listen = Listen {
-                                    artist: track.artist(),
-                                    track: track.title(),
-                                    album: track.album(),
-                                };
-                                match listen.single(token) {
-                                    Ok(_) => {
-                                        println!("Track submitted to ListenBrainz successfully");
-                                    }
-                                    Err(err) => {
-                                        eprintln!(
-                                            "Failed to submit track to ListenBrainz: {}",
-                                            err
-                                        );
-                                    }
+                                    Err(err) => eprintln!("{}", err),
                                 }
                             }
                         }
@@ -162,7 +142,10 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
 
                     scrobbled_current_song = true;
                 }
-            } else if current_play_time >= length {
+            } else if length
+                .map(|length| current_play_time >= length)
+                .unwrap_or(false)
+            {
                 current_play_time = Duration::from_secs(0);
                 scrobbled_current_song = false;
             }
@@ -178,20 +161,20 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
 
             if config.enable_notifications.unwrap_or(false) {
                 Notification::new()
-                    .summary(&current_track.title())
+                    .summary(current_track.title())
                     .body(&format!(
                         "{} - {}",
                         current_track.artist(),
                         current_track.album()
                     ))
-                    .timeout(Timeout::Milliseconds(6000))
+                    .timeout(NOTIFICATION_TIMEOUT)
                     .show()
                     .unwrap();
             }
 
-            println!("----");
             println!(
-                "Now playing: {} - {} ({})",
+                "----\n\
+                Now playing: {} - {} ({})",
                 current_track.artist(),
                 current_track.title(),
                 current_track.album()
@@ -199,30 +182,15 @@ pub fn run(config: Config, scrobbler: Option<Scrobbler>) {
 
             match filter_metadata(&config, current_track) {
                 Ok(FilterResult::Filtered(track)) | Ok(FilterResult::NotFiltered(track)) => {
-                    if let Some(ref scrobbler) = scrobbler {
-                        let scrobble = Scrobble::new(track.artist(), track.title(), track.album());
-                        match scrobbler.now_playing(&scrobble) {
-                            Ok(_) => println!("Status updated on Last.fm successfully"),
-                            Err(err) => eprintln!("Failed to update status on Last.fm: {}", err),
-                        }
-                    }
-
-                    if let Some(ref token) = config.listenbrainz_token {
-                        let listen = Listen {
-                            artist: track.artist(),
-                            track: track.title(),
-                            album: track.album(),
-                        };
-                        match listen.playing_now(token) {
-                            Ok(_) => println!("Status updated on ListenBrainz successfully"),
-                            Err(err) => {
-                                eprintln!("Failed to update status on ListenBrainz: {}", err)
-                            }
+                    for service in services.iter() {
+                        match service.now_playing(&track) {
+                            Ok(()) => println!("Status updated on {} successfully", service),
+                            Err(err) => eprintln!("{}", err),
                         }
                     }
                 }
                 Ok(FilterResult::Ignored) => println!("Track ignored"),
-                Err(err) => eprintln!("Failed to filter metadata: {}", err),
+                Err(err) => eprintln!("{}", err),
             }
         }
 

@@ -1,6 +1,6 @@
 [package]
 name = "rescrobbled"
-version = "0.4.0"
+version = "0.5.0-wip"
 authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
@@ -10,16 +10,17 @@ readme = "README.md"
 description = "MPRIS music scrobbler daemon"
 keywords = ["mpris", "music", "scrobble", "daemon"]
 categories = ["multimedia", "command-line-utilities"]
-publish = true
+publish = false
 
 [dependencies]
 mpris = "2.0.0-rc2"
 rustfm-scrobble = "1"
-listenbrainz-rust = "0.2"
+listenbrainz = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 toml = "0.5"
 dirs = "3"
 notify-rust = "4"
+anyhow = "1"
 
 [dev-dependencies]
 tempfile = "3"

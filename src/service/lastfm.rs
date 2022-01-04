@@ -1,4 +1,4 @@
-// Copyright (C) 2019 Koen Bolhuis
+// Copyright (C) 2021 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,18 +13,22 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::fs;
-use std::io;
-use std::io::Write;
+use std::fs::{self, Permissions};
+use std::io::{self, Write};
+use std::os::unix::fs::PermissionsExt;
 
-use crate::config;
+use anyhow::Result;
 
-use rustfm_scrobble::{Scrobbler, ScrobblerError};
+use rustfm_scrobble::Scrobbler;
+
+use crate::config::config_dir;
 
 const SESSION_FILE: &str = "session";
 
-pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<(), ScrobblerError> {
-    let mut path = config::config_dir().unwrap();
+/// Authenticate with Last.fm either using an existing
+/// session file or by logging in.
+pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<()> {
+    let mut path = config_dir()?;
     path.push(SESSION_FILE);
 
     if let Ok(session_key) = fs::read_to_string(&path) {
@@ -33,27 +37,29 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<(), ScrobblerError> {
     } else {
         let mut input = String::new();
 
-        print!("Username: ");
-        io::stdout().flush().unwrap();
+        print!(
+            "Log in to Last.fm\n\
+            Username: "
+        );
+        io::stdout().flush()?;
 
-        io::stdin().read_line(&mut input).unwrap();
+        io::stdin().read_line(&mut input)?;
         input.pop();
         let username = input.clone();
 
         input.clear();
 
         print!("Password: ");
-        io::stdout().flush().unwrap();
+        io::stdout().flush()?;
 
-        io::stdin().read_line(&mut input).unwrap();
+        io::stdin().read_line(&mut input)?;
         input.pop();
         let password = input;
 
         let session_response = scrobbler.authenticate_with_password(&username, &password)?;
 
-        // We don't care whether storing the session works;
-        // it's simply convenient if it does
-        let _ = fs::write(path, session_response.key);
+        let _ = fs::write(&path, session_response.key);
+        let _ = fs::set_permissions(&path, Permissions::from_mode(0o600));
     }
 
     Ok(())
