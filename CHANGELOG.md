@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.5.0 (unreleased)
+## v0.5.0 (2022-01-04)
 
 - Added support for multiple ListenBrainz instances
   - You can now specify multiple ListenBrainz instances, supporting custom installs
@@ -8,14 +8,12 @@
 - Added a number of example filter scripts
 - The auto-generated config file and session token file are now created with
   more restrictive permissions (`0600`)
-- Internal refactoring
-  - Improved code quality
-  - Slightly improved error handling
-- Cleaned up the README
-- Documented where the session token is stored
 - Added fallback behavior when a player does not report track length:
   - Tracks will scrobble after the default minimum track length (30 seconds)
   - Tracks will only scrobble once, unless paused and then unpaused
+- Internal refactoring
+- Cleaned up the README
+- Documented where the session token is stored
 
 ## 0.4.0 (2021-05-07)
 

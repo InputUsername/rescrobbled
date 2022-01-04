@@ -4,7 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/rescrobbled)](https://crates.io/crates/rescrobbled)
 [![CI](https://github.com/InputUsername/rescrobbled/actions/workflows/ci.yml/badge.svg)](https://github.com/InputUsername/rescrobbled/actions/workflows/ci.yml)
 
-Rescrobbled is a music scrobbler daemon. It detects active media players running on D-Bus using `MPRIS`, automatically updates "now playing" status, and scrobbles songs to [Last.fm](https://last.fm) or [ListenBrainz](https://listenbrainz.org) as they play.
+Rescrobbled is a music scrobbler daemon. It detects active media players running on D-Bus using `MPRIS`, automatically updates "now playing" status, and scrobbles songs to [Last.fm](https://last.fm) or [ListenBrainz](https://listenbrainz.org)-compatible services as they play.
 
 Among other things, due to sharing a Spotify account (I know, I know), I needed a way to scrobble to Last.fm without connecting the Spotify account to my Last.fm account. Rescrobbled offers a simple solution for this.
 
