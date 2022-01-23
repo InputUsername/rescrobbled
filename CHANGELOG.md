@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.5.1 (2022-01-23)
+
+- Fixed the way player D-Bus bus names are checked against the player whitelist
+
 ## v0.5.0 (2022-01-04)
 
 - Added support for multiple ListenBrainz instances

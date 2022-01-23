@@ -56,7 +56,7 @@ By default, track submission respects Last.fm's recommended behavior: songs shou
 
 If empty or ommitted, music from all players will be scrobbled; otherwise, rescrobbled will only listen to players in this list.
 
-A CLI application like `playerctl` can be used to determine a player's MPRIS identity for the whitelist. To do so start playing a song and run the following command:
+A CLI application like `playerctl` can be used to determine a player's name for the whitelist. To do so start playing a song and run the following command:
 ```
 playerctl --list-all
 ```
@@ -101,7 +101,7 @@ systemctl --user start rescrobbled.service
 - [Changelog](https://github.com/InputUsername/rescrobbled/blob/master/CHANGELOG.md)
 - [Releases](https://github.com/InputUsername/rescrobbled/releases)
 
-Issues and pull requests are more than welcome! Development happens on the [`development`](https://github.com/InputUsername/rescrobbled/tree/development) branch, so please create PRs against that.
+Issues and pull requests are more than welcome! Development happens on the [`development`](https://github.com/InputUsername/rescrobbled/tree/development) branch, so please create pull requests against that.
 All contributions will be licensed under GPLv3.
 
 ## License
