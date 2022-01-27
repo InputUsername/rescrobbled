@@ -82,7 +82,7 @@ impl Service {
                 println!("Authenticated with {} successfully!", lastfm);
                 services.push(lastfm);
             }
-            Err(err) => eprintln!("{}", err),
+            Err(err) => eprintln!("{:?}", err),
             _ => {}
         }
 
@@ -92,7 +92,7 @@ impl Service {
                     println!("Authenticated with {} successfully!", service);
                     services.push(service);
                 }
-                Err(err) => eprintln!("{}", err),
+                Err(err) => eprintln!("{:?}", err),
             }
         }
 

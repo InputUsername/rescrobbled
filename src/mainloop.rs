@@ -81,24 +81,34 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
             scrobbled_current_song = false;
         }
 
-        match player.get_playback_status() {
+        let status = player
+            .get_playback_status()
+            .map_err(|err| anyhow!("{}", err))
+            .context("Failed to retrieve playback status");
+
+        match status {
             Ok(PlaybackStatus::Playing) => {}
             Ok(_) => {
                 thread::sleep(POLL_INTERVAL);
                 continue;
             }
             Err(err) => {
-                eprintln!("Failed to retrieve playback status: {}", err);
+                eprintln!("{:?}", err);
 
                 thread::sleep(POLL_INTERVAL);
                 continue;
             }
         }
 
-        let metadata = match player.get_metadata() {
+        let metadata = player
+            .get_metadata()
+            .map_err(|err| anyhow!("{}", err))
+            .context("Failed to get metadata");
+
+        let metadata = match metadata {
             Ok(metadata) => metadata,
             Err(err) => {
-                eprintln!("Failed to get metadata: {}", err);
+                eprintln!("{:?}", err);
 
                 thread::sleep(POLL_INTERVAL);
                 continue;
@@ -132,12 +142,12 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                                     Ok(()) => {
                                         println!("Track submitted to {} successfully", service)
                                     }
-                                    Err(err) => eprintln!("{}", err),
+                                    Err(err) => eprintln!("{:?}", err),
                                 }
                             }
                         }
                         Ok(FilterResult::Ignored) => {}
-                        Err(err) => eprintln!("{}", err),
+                        Err(err) => eprintln!("{:?}", err),
                     }
 
                     scrobbled_current_song = true;
@@ -185,12 +195,12 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                     for service in services.iter() {
                         match service.now_playing(&track) {
                             Ok(()) => println!("Status updated on {} successfully", service),
-                            Err(err) => eprintln!("{}", err),
+                            Err(err) => eprintln!("{:?}", err),
                         }
                     }
                 }
                 Ok(FilterResult::Ignored) => println!("Track ignored"),
-                Err(err) => eprintln!("{}", err),
+                Err(err) => eprintln!("{:?}", err),
             }
         }
 
