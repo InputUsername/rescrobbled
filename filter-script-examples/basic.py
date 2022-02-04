@@ -10,4 +10,4 @@ artist, title, album = (l.rstrip() for l in sys.stdin.readlines())
 # ...and should provide them on the corresponding lines of the
 # standard output
 
-print(artist, title, album, end='\n')
+print(artist, title, album, sep='\n')
