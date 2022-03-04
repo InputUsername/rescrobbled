@@ -1244,7 +1244,7 @@ dependencies = [
 
 [[package]]
 name = "rescrobbled"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "anyhow",
  "dirs 4.0.0",
