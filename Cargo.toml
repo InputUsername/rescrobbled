@@ -1,6 +1,6 @@
 [package]
 name = "rescrobbled"
-version = "0.5.1"
+version = "0.5.2"
 authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
@@ -14,13 +14,13 @@ publish = false
 
 [dependencies]
 mpris = "2.0.0-rc2"
-rustfm-scrobble = "1"
-listenbrainz = "0.4"
-serde = { version = "1.0", features = ["derive"] }
-toml = "0.5"
-dirs = "3"
-notify-rust = "4"
-anyhow = "1"
+rustfm-scrobble = "1.1.1"
+listenbrainz = "0.4.1"
+serde = { version = "1.0.136", features = ["derive"] }
+toml = "0.5.8"
+dirs = "4.0.0"
+notify-rust = "4.5.6"
+anyhow = "1.0.55"
 
 [dev-dependencies]
-tempfile = "3"
+tempfile = "3.3.0"
