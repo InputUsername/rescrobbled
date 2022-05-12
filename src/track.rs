@@ -15,7 +15,9 @@
 
 use mpris::Metadata;
 
-#[derive(Debug, Default, PartialEq)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Default, PartialEq, Deserialize, Serialize)]
 pub struct Track {
     artist: String,
     title: String,
