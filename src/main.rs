@@ -1,6 +1,6 @@
 // Rescrobbled is an MPRIS music scrobbler daemon.
 //
-// Copyright (C) 2021 Koen Bolhuis
+// Copyright (C) 2022 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 
 use anyhow::Result;
 
+mod cache;
 mod config;
 mod filter;
 mod mainloop;

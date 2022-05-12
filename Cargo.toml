@@ -21,6 +21,7 @@ toml = "0.7.6"
 dirs = "5.0.1"
 anyhow = "1.0.71"
 rpassword = "7.2.0"
+csv = "1.2.2"
 
 [dev-dependencies]
 tempfile = "3.6.0"
