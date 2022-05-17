@@ -19,10 +19,11 @@ use anyhow::{anyhow, Context, Result};
 
 use listenbrainz::ListenBrainz;
 
-use rustfm_scrobble_proxy::{Scrobble, Scrobbler};
+use rustfm_scrobble_proxy::{Scrobble, ScrobbleBatch, Scrobbler};
 
 mod lastfm;
 
+use crate::cache::CachedScrobble;
 use crate::config::{Config, ListenBrainzConfig};
 use crate::track::Track;
 
@@ -136,6 +137,32 @@ impl Service {
                 client
                     .listen(track.artist(), track.title(), track.album())
                     .with_context(|| format!("Failed to submit track to {}", self))?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Submit a batch of cached scrobbles.
+    pub fn submit_cached(&self, batch: &[CachedScrobble]) -> Result<()> {
+        match self {
+            Self::LastFM(scrobbler) => {
+                // Convert &[CachedScrobble] through Vec<Scrobble> to ScrobbleBatch
+                let batch: Vec<Scrobble> = batch
+                    .iter()
+                    .map(|cached| {
+                        Scrobble::from(cached.track())
+                            .with_timestamp(cached.timestamp())
+                            .to_owned()
+                    })
+                    .collect();
+                let batch = ScrobbleBatch::from(batch);
+
+                scrobbler
+                    .scrobble_batch(&batch)
+                    .with_context(|| format!("Failed to submit cached batch to {}", self))?;
+            }
+            Self::ListenBrainz { client, .. } => {
+                todo!("Submit cached scrobbles to ListenBrainz");
             }
         }
         Ok(())

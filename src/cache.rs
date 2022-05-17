@@ -18,7 +18,7 @@ use std::path::PathBuf;
 
 use anyhow::{anyhow, Context, Result};
 
-use csv::Writer;
+use csv::{Reader, Writer};
 
 use serde::{Deserialize, Serialize};
 
@@ -30,11 +30,23 @@ const CACHE_FILE: &str = "cache.csv";
 
 const HEADER: &[&str] = &["timestamp", "artist", "title", "album"];
 
+const BATCH_SIZE: usize = 20;
+
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CachedScrobble {
     timestamp: u64,
     #[serde(flatten)]
     track: Track,
+}
+
+impl CachedScrobble {
+    pub fn timestamp(&self) -> u64 {
+        self.timestamp
+    }
+
+    pub fn track(&self) -> &Track {
+        &self.track
+    }
 }
 
 pub fn cache_dir() -> Result<PathBuf> {
@@ -68,8 +80,44 @@ impl Cache {
                 .write_record(HEADER)
                 .context("Failed to write scrobble cache file header")?;
         } else {
-            // TODO: submit cached scrobbles
-            todo!();
+            let mut reader = Reader::from_path(&path)
+                .context("Failed to open scrobble cache file for reading")?;
+
+            let mut batch = Vec::with_capacity(BATCH_SIZE);
+            let mut failed = Vec::new();
+
+            let mut records = reader.deserialize().peekable();
+            while let Some(record) = records.next() {
+                let cached_scrobble: CachedScrobble = record?;
+                batch.push(cached_scrobble);
+
+                if batch.len() == BATCH_SIZE || records.peek().is_none() {
+                    for service in services.iter() {
+                        if let Err(err) = service.submit_cached(&batch) {
+                            eprintln!("{:?}", err);
+                            failed.append(&mut batch);
+                            break;
+                        }
+                    }
+                    batch.clear();
+                }
+            }
+
+            if !failed.is_empty() {
+                let mut writer = Writer::from_path(&path)
+                    .context("Failed to open scrobble cache file for writing")?;
+
+                writer.write_record(HEADER).context("Failed to write scrobble cache file header")?;
+                for cached_scrobble in failed {
+                    if let Err(err) = writer.serialize(cached_scrobble) {
+                        eprintln!("{:?}", err);
+                    }
+                }
+
+                eprintln!("Failed to submit some or all cached scrobbles; failures remain cached");
+            } else {
+                println!("Successfully submitted cached scrobbles");
+            }
         }
 
         let cache_file = OpenOptions::new()
