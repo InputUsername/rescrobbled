@@ -25,6 +25,7 @@ mod player;
 mod service;
 mod track;
 
+use cache::Cache;
 use config::load_config;
 use service::Service;
 
@@ -38,6 +39,7 @@ fn main() -> Result<()> {
 
     let config = load_config()?;
     let services = Service::initialize_all(&config);
+    let _cache = Cache::new(&config, &services)?;
 
     mainloop::run(config, services)
 }

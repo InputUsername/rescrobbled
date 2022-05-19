@@ -22,6 +22,7 @@ use csv::{Reader, Writer};
 
 use serde::{Deserialize, Serialize};
 
+use crate::config::Config;
 use crate::service::Service;
 use crate::track::Track;
 
@@ -67,7 +68,11 @@ pub struct Cache {
 }
 
 impl Cache {
-    pub fn new(services: &[Service]) -> Result<Self> {
+    pub fn new(config: &Config, services: &[Service]) -> Result<Option<Self>> {
+        if !config.cache_scrobbles.unwrap_or(false) {
+            return Ok(None);
+        }
+
         let mut path = cache_dir()?;
 
         path.push(CACHE_FILE);
@@ -127,6 +132,6 @@ impl Cache {
 
         let writer = Writer::from_writer(cache_file);
 
-        Ok(Self { writer })
+        Ok(Some(Self { writer }))
     }
 }
