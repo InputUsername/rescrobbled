@@ -12,14 +12,16 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 use std::fs::{self, Permissions};
 use std::io::{self, Write};
 use std::os::unix::fs::PermissionsExt;
 
 use anyhow::Result;
+use anyhow::Context;
 
 use rustfm_scrobble::Scrobbler;
+
+use rpassword::read_password;
 
 use crate::config::config_dir;
 
@@ -52,9 +54,7 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<()> {
         print!("Password: ");
         io::stdout().flush()?;
 
-        io::stdin().read_line(&mut input)?;
-        input.pop();
-        let password = input;
+        let password = read_password().context("Failed to read password")?;
 
         let session_response = scrobbler.authenticate_with_password(&username, &password)?;
 
