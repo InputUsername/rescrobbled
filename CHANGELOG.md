@@ -1,5 +1,10 @@
 # Changelog
 
+## Next (unreleased)
+
+- Filter scripts now receive the `xesam:genre` (song genre) in addition to
+  artist, title and album name
+
 ## v0.5.3 (2022-06-16)
 
 - Entered Last.fm passwords are no longer displayed in plaintext

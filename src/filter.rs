@@ -18,6 +18,8 @@ use std::process::{Command, Stdio};
 
 use anyhow::{anyhow, bail, Context, Result};
 
+use mpris::Metadata;
+
 use crate::config::Config;
 use crate::track::Track;
 
@@ -28,7 +30,7 @@ pub enum FilterResult {
     Ignored,
 }
 
-pub fn filter_metadata(config: &Config, track: Track) -> Result<FilterResult> {
+pub fn filter_metadata(config: &Config, track: Track, metadata: &Metadata) -> Result<FilterResult> {
     if config.filter_script.is_none() {
         return Ok(FilterResult::NotFiltered(track));
     }
@@ -46,7 +48,20 @@ pub fn filter_metadata(config: &Config, track: Track) -> Result<FilterResult> {
         .take()
         .ok_or_else(|| anyhow!("Failed to get an stdin handle for the filter script"))?;
 
-    let buffer = format!("{}\n{}\n{}\n", track.artist(), track.title(), track.album());
+    // Write metadata to filter script stdin
+
+    let genre = metadata
+        .get("xesam:genre")
+        .and_then(|value| value.as_str_array())
+        .unwrap_or_else(Vec::new);
+
+    let buffer = format!(
+        "{}\n{}\n{}\n{}\n",
+        track.artist(),
+        track.title(),
+        track.album(),
+        genre.join(","),
+    );
     stdin
         .write_all(buffer.as_bytes())
         .context("Failed to write track metadata to filter script stdin")?;
@@ -114,7 +129,12 @@ echo \"Album=$album\"
         config.filter_script = Some(path);
 
         assert_eq!(
-            filter_metadata(&config, Track::new("lorem", "ipsum", "dolor")).unwrap(),
+            filter_metadata(
+                &config,
+                Track::new("lorem", "ipsum", "dolor"),
+                &Metadata::new("track_id"),
+            )
+            .unwrap(),
             FilterResult::Filtered(Track::new("Artist=lorem", "Title=ipsum", "Album=dolor"))
         );
 
@@ -131,7 +151,12 @@ true
         config.filter_script = Some(path_ignore);
 
         assert_eq!(
-            filter_metadata(&config, Track::new("lorem", "ipsum", "dolor")).unwrap(),
+            filter_metadata(
+                &config,
+                Track::new("lorem", "ipsum", "dolor"),
+                &Metadata::new("track_id"),
+            )
+            .unwrap(),
             FilterResult::Ignored
         );
 
@@ -140,7 +165,12 @@ true
         config.filter_script = None;
 
         assert_eq!(
-            filter_metadata(&config, Track::new("lorem", "ipsum", "dolor")).unwrap(),
+            filter_metadata(
+                &config,
+                Track::new("lorem", "ipsum", "dolor"),
+                &Metadata::new("track_id"),
+            )
+            .unwrap(),
             FilterResult::NotFiltered(Track::new("lorem", "ipsum", "dolor"))
         );
     }
