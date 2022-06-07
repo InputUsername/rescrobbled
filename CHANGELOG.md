@@ -2,8 +2,23 @@
 
 ## Next (unreleased)
 
-- Filter scripts now receive the `xesam:genre` (song genre) in addition to
-  artist, title and album name
+- Filter scripts now receive the `xesam:genre` (song genre) MPRIS property in addition to artist,
+  title and album name
+  - Note: you may have to update your filter script to take this into account. For example, the
+    following Python code now raises an error because the additional line (genre) is not unpacked:
+    ```python
+    artist, title, album = (l.rstrip() for l in sys.stdin.readlines())
+    ```
+    This can be fixed by reading and ignoring the additional line:
+    ```python
+    artist, title, album, _ = (l.rstrip() for l in sys.stdin.readlines())
+    ```
+    Or, alternatively:
+    ```python
+    artist = sys.stdin.readline().rstrip()
+    title = sys.stdin.readline().rstrip()
+    album = sys.stdin.readline().rstrip()
+    ```
 
 ## v0.5.3 (2022-06-16)
 

@@ -2,7 +2,7 @@
 
 import sys
 
-artist, title, album = (l.rstrip() for l in sys.stdin.readlines())
+artist, title, album, _ = (l.rstrip() for l in sys.stdin.readlines())
 
 # Ignore all tracks by specific artists
 
