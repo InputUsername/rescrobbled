@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime};
 
 use anyhow::{anyhow, Context, Result};
 
@@ -39,6 +39,13 @@ fn get_min_play_time(config: &Config, track_length: Duration) -> Duration {
             MIN_PLAY_TIME
         }
     })
+}
+
+fn get_timestamp() -> Result<u64> {
+    SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)
+        .map(|duration| duration.as_secs())
+        .context("System time is before the UNIX epoch")
 }
 
 pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
@@ -127,8 +134,16 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                     match filter_metadata(&config, current_track, &metadata) {
                         Ok(FilterResult::Filtered(track))
                         | Ok(FilterResult::NotFiltered(track)) => {
+                            // Get the current timestamp before submission
+                            // This way, the timestamp will be the same for all services.
+                            // When submitting cached scrobbles, if one service fails, the
+                            // scrobble is cached. When it is re-submitted on next launch,
+                            // services that did succeed will (hopefully) ignore the cached scrobble
+                            // because it has a known timestamp.
+                            let timestamp = get_timestamp()?;
+
                             for service in services.iter() {
-                                match service.submit(&track) {
+                                match service.submit(&track, timestamp) {
                                     Ok(()) => {
                                         println!("Track submitted to {} successfully", service)
                                     }

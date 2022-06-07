@@ -124,16 +124,19 @@ impl Service {
     }
 
     /// Scrobble a track.
-    pub fn submit(&self, track: &Track) -> Result<()> {
+    pub fn submit(&self, track: &Track, timestamp: u64) -> Result<()> {
         match self {
             Self::LastFM(scrobbler) => {
-                let scrobble = Scrobble::new(track.artist(), track.title(), track.album());
+                let scrobble = Scrobble::new(track.artist(), track.title(), track.album())
+                    .with_timestamp(timestamp);
 
                 scrobbler
                     .scrobble(&scrobble)
                     .with_context(|| format!("Failed to submit track to {}", self))?;
             }
             Self::ListenBrainz { client, .. } => {
+                todo!("Submit ListenBrainz track at timestamp");
+
                 client
                     .listen(track.artist(), track.title(), track.album())
                     .with_context(|| format!("Failed to submit track to {}", self))?;
