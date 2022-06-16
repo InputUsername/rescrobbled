@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.5.3 (2022-06-16)
+
+- Entered Last.fm passwords are no longer displayed in plaintext
+- Updated dependencies
+
 ## v0.5.2 (2022-03-04)
 
 - Improved error handling

@@ -1,6 +1,6 @@
 [package]
 name = "rescrobbled"
-version = "0.5.2"
+version = "0.5.3"
 authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
 edition = "2018"
 license = "GPL-3.0"
@@ -21,6 +21,7 @@ toml = "0.5.8"
 dirs = "4.0.0"
 notify-rust = "4.5.6"
 anyhow = "1.0.55"
+rpassword = "6.0.1"
 
 [dev-dependencies]
 tempfile = "3.3.0"
