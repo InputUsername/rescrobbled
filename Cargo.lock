@@ -1139,7 +1139,7 @@ dependencies = [
  "mpris",
  "notify-rust",
  "rpassword",
- "rustfm-scrobble",
+ "rustfm-scrobble-proxy",
  "serde",
  "tempfile",
  "toml",
@@ -1164,9 +1164,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ef03e0a2b150c7a90d01faf6254c9c48a41e95fb2a8c2ac1c6f0d2b9aefc342"
 
 [[package]]
-name = "rustfm-scrobble"
-version = "1.1.1"
-source = "git+https://github.com/InputUsername/rustfm-scrobble.git?branch=use-attohttpc#303167d88d2c2d6b8e0e9bf3e62641be5e523828"
+name = "rustfm-scrobble-proxy"
+version = "1.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "91ed7651e0361728ed8e0965a4ce1d1b25a34eb23525a017153a94663b2fa634"
 dependencies = [
  "attohttpc 0.19.1",
  "md5",
@@ -1260,18 +1261,6 @@ dependencies = [
  "proc-macro2 1.0.40",
  "quote 1.0.20",
  "syn 1.0.98",
-]
-
-[[package]]
-name = "serde_urlencoded"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d3491c14715ca2294c4d6a88f15e84739788c1d030eed8c110436aafdaa2f3fd"
-dependencies = [
- "form_urlencoded",
- "itoa",
- "ryu",
- "serde",
 ]
 
 [[package]]

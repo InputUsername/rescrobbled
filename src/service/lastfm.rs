@@ -19,7 +19,7 @@ use std::os::unix::fs::PermissionsExt;
 use anyhow::Result;
 use anyhow::Context;
 
-use rustfm_scrobble::Scrobbler;
+use rustfm_scrobble_proxy::Scrobbler;
 
 use rpassword::read_password;
 
