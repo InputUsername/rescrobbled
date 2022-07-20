@@ -2,6 +2,8 @@
 
 ## Next (unreleased)
 
+- Fixed scrobbling behind a HTTP/HTTPS proxy
+  - Replaced the rustfm-scrobble dependency with a fork that automatically picks up proxy settings
 - Filter scripts now receive the `xesam:genre` (song genre) MPRIS property in addition to artist,
   title and album name
   - Note: you may have to update your filter script to take this into account. For example, the
