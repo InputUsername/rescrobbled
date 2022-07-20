@@ -1,6 +1,6 @@
 # Changelog
 
-## Next (unreleased)
+## v0.6.0 (2022-07-20)
 
 - Fixed scrobbling behind a HTTP/HTTPS proxy
   - Replaced the rustfm-scrobble dependency with a fork that automatically picks up proxy settings
