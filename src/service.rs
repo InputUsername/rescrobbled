@@ -19,7 +19,7 @@ use anyhow::{anyhow, Context, Result};
 
 use listenbrainz::ListenBrainz;
 
-use rustfm_scrobble::Scrobbler;
+use rustfm_scrobble_proxy::Scrobbler;
 
 mod lastfm;
 

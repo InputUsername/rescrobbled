@@ -15,7 +15,7 @@
 
 use mpris::Metadata;
 
-use rustfm_scrobble::Scrobble;
+use rustfm_scrobble_proxy::Scrobble;
 
 #[derive(Debug, Default, PartialEq)]
 pub struct Track {
