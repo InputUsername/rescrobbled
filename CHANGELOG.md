@@ -21,6 +21,7 @@
     title = sys.stdin.readline().rstrip()
     album = sys.stdin.readline().rstrip()
     ```
+- Moved to Rust 2021 edition
 
 ## v0.5.3 (2022-06-16)
 

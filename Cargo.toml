@@ -2,7 +2,7 @@
 name = "rescrobbled"
 version = "0.5.3"
 authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0"
 repository = "https://github.com/InputUsername/rescrobbled.git"
 homepage = "https://github.com/InputUsername/rescrobbled"
