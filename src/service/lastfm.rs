@@ -16,10 +16,9 @@ use std::fs::{self, Permissions};
 use std::io::{self, Write};
 use std::os::unix::fs::PermissionsExt;
 
-use anyhow::Result;
-use anyhow::Context;
+use anyhow::{Context, Result};
 
-use rustfm_scrobble::Scrobbler;
+use rustfm_scrobble_proxy::Scrobbler;
 
 use rpassword::read_password;
 

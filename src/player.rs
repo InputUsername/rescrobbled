@@ -49,7 +49,7 @@ fn is_bus_name_whitelisted<'p>(player: &'p Player, whitelist: &HashSet<String>) 
         .trim_start_matches(BUS_NAME_PREFIX);
 
     let without_instance = bus_name
-        .rsplit_once(".")
+        .rsplit_once('.')
         .map(|(name, _instance)| name)
         .unwrap_or(bus_name);
 
