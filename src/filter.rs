@@ -13,7 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::io::Write;
+use std::fmt::Write as _;
+use std::io::Write as _;
 use std::process::{Command, Stdio};
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -53,7 +54,7 @@ pub fn filter_metadata(config: &Config, track: Track, metadata: &Metadata) -> Re
     let genre = metadata
         .get("xesam:genre")
         .and_then(|value| value.as_str_array())
-        .unwrap_or_else(Vec::new);
+        .unwrap_or_default();
 
     let buffer = format!(
         "{}\n{}\n{}\n{}\n",
@@ -76,14 +77,14 @@ pub fn filter_metadata(config: &Config, track: Track, metadata: &Metadata) -> Re
     if !output.status.success() {
         let mut message = "Filter script returned unsuccessully ".to_owned();
         if let Some(status) = output.status.code() {
-            message += &format!("with status: {}\n", status);
+            writeln!(message, "with status: {status}").unwrap();
         } else {
             message += "without status\n";
         }
 
         match String::from_utf8(output.stderr) {
-            Ok(output) => message += &format!("Stderr: {}", output),
-            Err(err) => message += &format!("Stderr is not valid UTF-8: {}", err),
+            Ok(output) => write!(message, "Stderr: {output}").unwrap(),
+            Err(err) => write!(message, "Stderr is not valid UTF-8: {err}").unwrap(),
         }
 
         bail!(message);

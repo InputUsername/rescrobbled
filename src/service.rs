@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::fmt;
+use std::fmt::{self, Write};
 
 use anyhow::{anyhow, Context, Result};
 
@@ -62,7 +62,7 @@ impl Service {
         client.authenticate(&lb.token).with_context(|| {
             let mut err = "Failed to authenticate with ListenBrainz".to_owned();
             if let Some(ref url) = lb.url {
-                err += &format!(" ({})", url);
+                write!(err, " ({url})").unwrap();
             }
             err
         })?;
