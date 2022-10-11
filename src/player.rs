@@ -43,9 +43,6 @@ pub fn is_active(player: &Player) -> bool {
 fn is_bus_name_whitelisted<'p>(player: &'p Player, whitelist: &HashSet<String>) -> bool {
     let bus_name = player
         .bus_name()
-        .as_cstr()
-        .to_str()
-        .unwrap_or("")
         .trim_start_matches(BUS_NAME_PREFIX);
 
     let without_instance = bus_name
@@ -69,7 +66,7 @@ fn is_whitelisted(config: &Config, player: &Player) -> bool {
 }
 
 /// Wait for any (whitelisted) player to become active again.
-pub fn wait_for_player<'f>(config: &Config, finder: &'f PlayerFinder) -> Player<'f> {
+pub fn wait_for_player(config: &Config, finder: &PlayerFinder) -> Player {
     loop {
         let players = match finder.find_all() {
             Ok(players) => players,
