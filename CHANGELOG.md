@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.6.1 (2022-10-11)
+
+- Fixed builds of version 0.6.0 breaking
+  - Dependency mpris released a breaking change in version 2.0.0-rc3,
+    but Rust/Cargo's semver resolution does not see this as a breaking change,
+    leading to builds of rescrobbled 0.6.0 breaking that were previously fine
+    with mpris 2.0.0-rc2.
+
 ## v0.6.0 (2022-07-20)
 
 - Fixed scrobbling behind a HTTP/HTTPS proxy
