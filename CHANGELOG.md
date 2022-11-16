@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.6.2 (2022-11-16)
+
+- Fixed scrobbling from applications that report a single string value for `xesam:artist`
+
 ## v0.6.1 (2022-10-11)
 
 - Fixed builds of version 0.6.0 breaking
