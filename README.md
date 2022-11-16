@@ -69,6 +69,7 @@ It receives the following properties on consecutive lines of its standard input 
 - song title;
 - album name;
 - zero or more comma-separated (`,`) genre(s)
+
 The script should write the filtered artist, song title and album name on corresponding lines of
 its standard output.
 This can be used to clean up song names, for example removing "remastered" and similar suffixes.

@@ -1,6 +1,6 @@
 [package]
 name = "rescrobbled"
-version = "0.6.1"
+version = "0.6.2"
 authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0"
@@ -13,7 +13,7 @@ categories = ["multimedia", "command-line-utilities"]
 publish = false
 
 [dependencies]
-mpris = "2.0.0-rc3"
+mpris = "2.0.0"
 rustfm-scrobble-proxy = "1.1.2"
 listenbrainz = "0.4.1"
 serde = { version = "1.0.136", features = ["derive"] }
