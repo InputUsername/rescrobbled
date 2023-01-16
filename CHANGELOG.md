@@ -1,5 +1,9 @@
 # Changelog
 
+## Next (unreleased)
+
+- Use Rustls instead of OpenSSL for `listenbrainz` and `rustfm-scrobble-proxy`
+
 ## v0.6.2 (2022-11-16)
 
 - Fixed scrobbling from applications that report a single string value for `xesam:artist`
