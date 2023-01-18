@@ -22,7 +22,6 @@ dirs = "4.0.0"
 notify-rust = "4.5.6"
 anyhow = "1.0.55"
 rpassword = "6.0.1"
-attohttpc = { version = "0.24.0", features = ["json", "form", "tls-rustls-native-roots"] }
 
 [dev-dependencies]
 tempfile = "3.3.0"
