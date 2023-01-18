@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Koen Bolhuis
+// Copyright (C) 2023 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -60,7 +60,7 @@ pub fn filter_metadata(config: &Config, track: Track, metadata: &Metadata) -> Re
         "{}\n{}\n{}\n{}\n",
         track.artist(),
         track.title(),
-        track.album(),
+        track.album().unwrap_or(""),
         genre.join(","),
     );
     stdin
@@ -95,7 +95,7 @@ pub fn filter_metadata(config: &Config, track: Track, metadata: &Metadata) -> Re
 
     let mut output = output.split('\n');
     match (output.next(), output.next(), output.next()) {
-        (Some(artist), Some(title), Some(album)) => {
+        (Some(artist), Some(title), album) => {
             Ok(FilterResult::Filtered(Track::new(artist, title, album)))
         }
         _ => Ok(FilterResult::Ignored),
@@ -104,13 +104,19 @@ pub fn filter_metadata(config: &Config, track: Track, metadata: &Metadata) -> Re
 
 #[cfg(test)]
 mod tests {
+    use std::fs;
+    use std::os::unix::fs::PermissionsExt;
+    use std::path::Path;
+
     use super::*;
+
+    fn write_test_script(path: &Path, contents: &str) {
+        fs::write(path, contents).unwrap();
+        fs::set_permissions(path, fs::Permissions::from_mode(0o755)).unwrap();
+    }
 
     #[test]
     fn test_filter_script() {
-        use std::fs;
-        use std::os::unix::fs::PermissionsExt;
-
         let mut config = Config::default();
         let temp_dir = tempfile::tempdir().unwrap();
 
@@ -124,19 +130,22 @@ echo \"Title=$title\"
 echo \"Album=$album\"
 ";
 
-        fs::write(&path, FILTER_SCRIPT).unwrap();
-        fs::set_permissions(&path, fs::Permissions::from_mode(0o755)).unwrap();
+        write_test_script(&path, FILTER_SCRIPT);
 
         config.filter_script = Some(path);
 
         assert_eq!(
             filter_metadata(
                 &config,
-                Track::new("lorem", "ipsum", "dolor"),
+                Track::new("lorem", "ipsum", Some("dolor")),
                 &Metadata::new("track_id"),
             )
             .unwrap(),
-            FilterResult::Filtered(Track::new("Artist=lorem", "Title=ipsum", "Album=dolor"))
+            FilterResult::Filtered(Track::new(
+                "Artist=lorem",
+                "Title=ipsum",
+                Some("Album=dolor")
+            ))
         );
 
         // Script that produces no output should result in `FilterResult::Ignored`
@@ -146,15 +155,14 @@ echo \"Album=$album\"
 true
 ";
 
-        fs::write(&path_ignore, FILTER_SCRIPT_IGNORE).unwrap();
-        fs::set_permissions(&path_ignore, fs::Permissions::from_mode(0o755)).unwrap();
+        write_test_script(&path_ignore, FILTER_SCRIPT_IGNORE);
 
         config.filter_script = Some(path_ignore);
 
         assert_eq!(
             filter_metadata(
                 &config,
-                Track::new("lorem", "ipsum", "dolor"),
+                Track::new("lorem", "ipsum", Some("dolor")),
                 &Metadata::new("track_id"),
             )
             .unwrap(),
@@ -168,11 +176,38 @@ true
         assert_eq!(
             filter_metadata(
                 &config,
-                Track::new("lorem", "ipsum", "dolor"),
+                Track::new("lorem", "ipsum", Some("dolor")),
                 &Metadata::new("track_id"),
             )
             .unwrap(),
-            FilterResult::NotFiltered(Track::new("lorem", "ipsum", "dolor"))
+            FilterResult::NotFiltered(Track::new("lorem", "ipsum", Some("dolor")))
         );
+
+        // Album should be optional, empty album should still result in `FilterResult::Filtered`
+
+        let path_no_album = temp_dir.path().join("filter_no_album.sh");
+        const FILTER_SCRIPT_NO_ALBUM: &str = "#!/usr/bin/bash
+read artist
+read title
+read album
+read genre
+echo \"$artist\"
+echo \"$title\"
+echo \"$album\"
+";
+
+        write_test_script(&path_no_album, FILTER_SCRIPT_NO_ALBUM);
+
+        config.filter_script = Some(path_no_album);
+
+        assert_eq!(
+            filter_metadata(
+                &config,
+                Track::new("lorem", "ipsum", None),
+                &Metadata::new("track_id"),
+            )
+            .unwrap(),
+            FilterResult::Filtered(Track::new("lorem", "ipsum", None)),
+        )
     }
 }
