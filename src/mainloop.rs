@@ -165,13 +165,15 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
             current_play_time = Duration::from_secs(0);
             scrobbled_current_song = false;
 
-            println!(
+            print!(
                 "----\n\
-                Now playing: {} - {} ({})",
+                Now playing: {} - {}",
                 current_track.artist(),
                 current_track.title(),
-                current_track.album()
             );
+            if let Some(album) = current_track.album() {
+                println!(" ({album})");
+            }
 
             match filter_metadata(&config, current_track, &metadata) {
                 Ok(FilterResult::Filtered(track)) | Ok(FilterResult::NotFiltered(track)) => {

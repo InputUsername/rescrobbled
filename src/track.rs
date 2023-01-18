@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Koen Bolhuis
+// Copyright (C) 2023 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,13 +15,11 @@
 
 use mpris::Metadata;
 
-use rustfm_scrobble_proxy::Scrobble;
-
 #[derive(Debug, Default, PartialEq)]
 pub struct Track {
     artist: String,
     title: String,
-    album: String,
+    album: Option<String>,
 }
 
 impl Track {
@@ -33,22 +31,28 @@ impl Track {
         &self.title
     }
 
-    pub fn album(&self) -> &str {
-        &self.album
+    pub fn album(&self) -> Option<&str> {
+        self.album.as_deref()
     }
 
-    pub fn new(artist: &str, title: &str, album: &str) -> Self {
+    pub fn new(artist: &str, title: &str, album: Option<&str>) -> Self {
         Self {
             artist: artist.to_owned(),
             title: title.to_owned(),
-            album: album.to_owned(),
+            album: album.and_then(|album| {
+                if !album.is_empty() {
+                    Some(album.to_owned())
+                } else {
+                    None
+                }
+            }),
         }
     }
 
     pub fn clear(&mut self) {
         self.artist.clear();
         self.title.clear();
-        self.album.clear();
+        self.album.take();
     }
 
     pub fn clone_from(&mut self, other: &Self) {
@@ -67,7 +71,13 @@ impl Track {
 
         let title = metadata.title().unwrap_or("").to_owned();
 
-        let album = metadata.album_name().unwrap_or("").to_owned();
+        let album = metadata.album_name().and_then(|album| {
+            if !album.is_empty() {
+                Some(album.to_owned())
+            } else {
+                None
+            }
+        });
 
         Self {
             artist,
@@ -77,8 +87,85 @@ impl Track {
     }
 }
 
-impl From<&Track> for Scrobble {
-    fn from(track: &Track) -> Scrobble {
-        Scrobble::new(track.artist(), track.title(), track.album())
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use mpris::MetadataValue;
+    use std::collections::HashMap;
+
+    #[test]
+    fn test_new() {
+        // Constructing a track with an empty album should result in `None` for `Track::album()`
+
+        assert_eq!(
+            Track::new("Enter Shikari", "Live Outside", None).album(),
+            None
+        );
+
+        // Constructing a track with a nonempty album should result in `Some` for `Track::album()`
+
+        assert_eq!(
+            Track::new("Dimension", "Psycho", Some("Organ")).album(),
+            Some("Organ")
+        );
+    }
+
+    #[test]
+    fn test_from_metadata() {
+        // Metadata without an album should result in a `None` for `Track::album()`
+
+        let mut metadata_without_album = HashMap::new();
+        metadata_without_album.insert(
+            "xesam:artists".to_owned(),
+            MetadataValue::Array(vec![MetadataValue::String("Billy Joel".to_owned())]),
+        );
+        metadata_without_album.insert(
+            "xesam:title".to_owned(),
+            MetadataValue::String("We didn't start the fire".to_owned()),
+        );
+        let metadata_without_album = Metadata::from(metadata_without_album);
+        let track_without_album = Track::from_metadata(&metadata_without_album);
+
+        assert_eq!(track_without_album.album(), None);
+
+        // Metadata with an empty album should result in a `None` for `Track::album()`
+
+        let mut metadata_empty_album = HashMap::new();
+        metadata_empty_album.insert(
+            "xesam:artist".to_owned(),
+            MetadataValue::Array(vec![MetadataValue::String("The Prodigy".to_owned())]),
+        );
+        metadata_empty_album.insert(
+            "xesam:title".to_owned(),
+            MetadataValue::String("Wild Frontier".to_owned()),
+        );
+        metadata_empty_album.insert(
+            "xesam:album".to_owned(),
+            MetadataValue::String("".to_owned()),
+        );
+        let metadata_empty_album = Metadata::from(metadata_empty_album);
+        let track_empty_album = Track::from_metadata(&metadata_empty_album);
+
+        assert_eq!(track_empty_album.album(), None);
+
+        // Metadata with a nonempty album should result in a `Some` for `Track::album()`
+
+        let mut metadata_with_album = HashMap::new();
+        metadata_with_album.insert(
+            "xesam:artist".to_owned(),
+            MetadataValue::Array(vec![MetadataValue::String("Men At Work".to_owned())]),
+        );
+        metadata_with_album.insert(
+            "xesam:title".to_owned(),
+            MetadataValue::String("Who Can It Be Now?".to_owned()),
+        );
+        metadata_with_album.insert(
+            "xesam:album".to_owned(),
+            MetadataValue::String("Business As Usual".to_owned()),
+        );
+        let metadata_with_album = Metadata::from(metadata_with_album);
+        let track_with_album = Track::from_metadata(&metadata_with_album);
+
+        assert_eq!(track_with_album.album(), Some("Business As Usual"));
     }
 }

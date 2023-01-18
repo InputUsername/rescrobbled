@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Koen Bolhuis
+// Copyright (C) 2023 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ use anyhow::{anyhow, Context, Result};
 
 use listenbrainz::ListenBrainz;
 
-use rustfm_scrobble_proxy::Scrobbler;
+use rustfm_scrobble_proxy::{Scrobble, Scrobbler};
 
 mod lastfm;
 
@@ -107,8 +107,14 @@ impl Service {
     pub fn now_playing(&self, track: &Track) -> Result<()> {
         match self {
             Self::LastFM(scrobbler) => {
+                let album = track
+                    .album()
+                    .ok_or_else(|| anyhow!("Cannot submit track without album to {self}"))?;
+
+                let scrobble = Scrobble::new(track.artist(), track.title(), album);
+
                 scrobbler
-                    .now_playing(&track.into())
+                    .now_playing(&scrobble)
                     .with_context(|| format!("Failed to update status on {}", self))?;
             }
             Self::ListenBrainz { client, .. } => {
@@ -124,8 +130,14 @@ impl Service {
     pub fn submit(&self, track: &Track) -> Result<()> {
         match self {
             Self::LastFM(scrobbler) => {
+                let album = track
+                .album()
+                .ok_or_else(|| anyhow!("Cannot submit track without album to {self}"))?;
+
+                let scrobble = Scrobble::new(track.artist(), track.title(), album);
+
                 scrobbler
-                    .scrobble(&track.into())
+                    .scrobble(&scrobble)
                     .with_context(|| format!("Failed to submit track to {}", self))?;
             }
             Self::ListenBrainz { client, .. } => {
