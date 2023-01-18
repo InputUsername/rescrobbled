@@ -73,7 +73,6 @@ impl Track {
 
         let album = metadata.album_name().and_then(|album| {
             if !album.is_empty() {
-                eprintln!("album <{album}> not empty");
                 Some(album.to_owned())
             } else {
                 None
