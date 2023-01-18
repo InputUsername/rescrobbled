@@ -42,10 +42,6 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
 
 To use rescrobbled with Last.fm, you'll need a Last.fm API key and secret. These can be obtained [here](https://www.last.fm/api/account/create).
 
-`enable-notifications`
-
-Set this to `true` to show desktop notifications when a song starts playing: useful if your music player does not support notifications. Defaults to `false`.
-
 `min-play-time`
 
 Minimum play time in seconds before a song is scrobbled.

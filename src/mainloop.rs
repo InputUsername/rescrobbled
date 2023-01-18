@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Koen Bolhuis
+// Copyright (C) 2023 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,8 +20,6 @@ use anyhow::{anyhow, Context, Result};
 
 use mpris::{PlaybackStatus, PlayerFinder};
 
-use notify_rust::{Notification, Timeout};
-
 use crate::config::Config;
 use crate::filter::{filter_metadata, FilterResult};
 use crate::player;
@@ -32,8 +30,6 @@ const POLL_INTERVAL: Duration = Duration::from_millis(500);
 
 const MIN_LENGTH: Duration = Duration::from_secs(30);
 const MIN_PLAY_TIME: Duration = Duration::from_secs(4 * 60);
-
-const NOTIFICATION_TIMEOUT: Timeout = Timeout::Milliseconds(6000);
 
 fn get_min_play_time(config: &Config, track_length: Duration) -> Duration {
     config.min_play_time.unwrap_or_else(|| {
@@ -168,19 +164,6 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
             timer = Instant::now();
             current_play_time = Duration::from_secs(0);
             scrobbled_current_song = false;
-
-            if config.enable_notifications.unwrap_or(false) {
-                Notification::new()
-                    .summary(current_track.title())
-                    .body(&format!(
-                        "{} - {}",
-                        current_track.artist(),
-                        current_track.album()
-                    ))
-                    .timeout(NOTIFICATION_TIMEOUT)
-                    .show()
-                    .unwrap();
-            }
 
             println!(
                 "----\n\

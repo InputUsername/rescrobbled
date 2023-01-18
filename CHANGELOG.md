@@ -1,5 +1,10 @@
 # Changelog
 
+## Next (unreleased)
+
+- Removed notification functionality
+  - As an alternative, I recommend [mpris-notifier](https://github.com/l1na-forever/mpris-notifier).
+
 ## v0.6.2 (2022-11-16)
 
 - Fixed scrobbling from applications that report a single string value for `xesam:artist`
