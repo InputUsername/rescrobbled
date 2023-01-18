@@ -4,6 +4,13 @@
 
 - Removed notification functionality
   - As an alternative, I recommend [mpris-notifier](https://github.com/l1na-forever/mpris-notifier).
+- Made album name optional when submitting to ListenBrainz
+  - ListenBrainz does not require album names for submissions, so they are now optional.
+  - The Last.fm library used by rescrobbled still requires the album, but this restriction could
+    be lifted in the future.
+  - This does have the side effect of now treating empty album names (eg. "")
+    the same as if they were missing from the MPRIS metadata.
+- Moved to OpenSSL/`libssl` version 3
 
 ## v0.6.2 (2022-11-16)
 
