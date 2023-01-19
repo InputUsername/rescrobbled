@@ -24,7 +24,6 @@ Rescrobbled expects a configuration file at `~/.config/rescrobbled/config.toml` 
 ```toml
 lastfm-key = "Last.fm API key"
 lastfm-secret = "Last.fm API secret"
-enable-notifications = false
 min-play-time = 0
 player-whitelist = [ "Player MPRIS identity or bus name" ]
 filter-script = "path/to/script"
