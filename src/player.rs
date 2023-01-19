@@ -40,7 +40,7 @@ pub fn is_active(player: &Player) -> bool {
 /// This takes into account the possibility of multiple player instances:
 /// it checks both the name, and the name with the instance part
 /// (something like `.instance123`) stripped off.
-fn is_bus_name_whitelisted<'p>(player: &'p Player, whitelist: &HashSet<String>) -> bool {
+fn is_bus_name_whitelisted(player: &Player, whitelist: &HashSet<String>) -> bool {
     let bus_name = player
         .bus_name()
         .trim_start_matches(BUS_NAME_PREFIX);
@@ -76,6 +76,7 @@ pub fn wait_for_player(config: &Config, finder: &PlayerFinder) -> Player {
             }
         };
 
+        #[allow(clippy::manual_flatten)]
         for player in players {
             if let Ok(player) = player {
                 if is_active(&player) && is_whitelisted(config, &player) {
