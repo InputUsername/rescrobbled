@@ -68,7 +68,7 @@ fn is_whitelisted(config: &Config, player: &Player) -> bool {
 /// Wait for any (whitelisted) player to become active again.
 pub fn wait_for_player(config: &Config, finder: &PlayerFinder) -> Player {
     loop {
-        let players = match finder.find_all() {
+        let players = match finder.iter_players() {
             Ok(players) => players,
             _ => {
                 thread::sleep(INIT_WAIT_TIME);
@@ -77,8 +77,10 @@ pub fn wait_for_player(config: &Config, finder: &PlayerFinder) -> Player {
         };
 
         for player in players {
-            if is_active(&player) && is_whitelisted(config, &player) {
-                return player;
+            if let Ok(player) = player {
+                if is_active(&player) && is_whitelisted(config, &player) {
+                    return player;
+                }
             }
         }
 

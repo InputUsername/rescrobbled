@@ -10,6 +10,7 @@
     be lifted in the future.
   - This does have the side effect of now treating empty album names (eg. "")
     the same as if they were missing from the MPRIS metadata.
+- Updated player finding logic to be more resilient to players that cause errors
 - Moved to OpenSSL/`libssl` version 3
 
 ## v0.6.2 (2022-11-16)
