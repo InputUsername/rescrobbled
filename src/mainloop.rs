@@ -113,10 +113,9 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
 
         let current_track = Track::from_metadata(&metadata);
 
-        let length =
-            metadata
-                .length()
-                .and_then(|length| if length.is_zero() { None } else { Some(length) });
+        let length = metadata
+            .length()
+            .and_then(|length| if length.is_zero() { None } else { Some(length) });
 
         if current_track == previous_track {
             if !scrobbled_current_song {

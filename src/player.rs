@@ -41,9 +41,7 @@ pub fn is_active(player: &Player) -> bool {
 /// it checks both the name, and the name with the instance part
 /// (something like `.instance123`) stripped off.
 fn is_bus_name_whitelisted(player: &Player, whitelist: &HashSet<String>) -> bool {
-    let bus_name = player
-        .bus_name()
-        .trim_start_matches(BUS_NAME_PREFIX);
+    let bus_name = player.bus_name().trim_start_matches(BUS_NAME_PREFIX);
 
     let without_instance = bus_name
         .rsplit_once('.')

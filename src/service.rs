@@ -131,8 +131,8 @@ impl Service {
         match self {
             Self::LastFM(scrobbler) => {
                 let album = track
-                .album()
-                .ok_or_else(|| anyhow!("Cannot submit track without album to {self}"))?;
+                    .album()
+                    .ok_or_else(|| anyhow!("Cannot submit track without album to {self}"))?;
 
                 let scrobble = Scrobble::new(track.artist(), track.title(), album);
 
