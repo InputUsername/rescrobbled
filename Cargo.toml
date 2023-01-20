@@ -1,6 +1,6 @@
 [package]
 name = "rescrobbled"
-version = "0.6.2"
+version = "0.7.0"
 authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
 edition = "2021"
 license = "GPL-3.0"

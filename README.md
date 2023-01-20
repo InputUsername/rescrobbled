@@ -12,7 +12,10 @@ Among other things, due to sharing a Spotify account (I know, I know), I needed 
 
 You can download one of the prebuilt binaries [here](https://github.com/InputUsername/rescrobbled/releases). The binary can be placed anywhere you like.
 
-Rescrobbled is available on [Crates.io](https://crates.io/crates/rescrobbled): `cargo install rescrobbled`
+Rescrobbled is available on [crates.io](https://crates.io/crates/rescrobbled):
+```
+cargo install rescrobbled
+```
 
 Alternatively you can install from source using `cargo install --path .` from the crate root.
 
@@ -51,7 +54,7 @@ By default, track submission respects Last.fm's recommended behavior: songs shou
 
 If empty or ommitted, music from all players will be scrobbled; otherwise, rescrobbled will only listen to players in this list.
 
-A CLI application like `playerctl` can be used to determine a player's name for the whitelist. To do so start playing a song and run the following command:
+A CLI application like [playerctl](https://github.com/altdesktop/playerctl) can be used to determine a player's name for the whitelist. To do so, start playing a song and run the following command:
 ```
 playerctl --list-all
 ```
