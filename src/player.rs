@@ -40,10 +40,8 @@ pub fn is_active(player: &Player) -> bool {
 /// This takes into account the possibility of multiple player instances:
 /// it checks both the name, and the name with the instance part
 /// (something like `.instance123`) stripped off.
-fn is_bus_name_whitelisted<'p>(player: &'p Player, whitelist: &HashSet<String>) -> bool {
-    let bus_name = player
-        .bus_name()
-        .trim_start_matches(BUS_NAME_PREFIX);
+fn is_bus_name_whitelisted(player: &Player, whitelist: &HashSet<String>) -> bool {
+    let bus_name = player.bus_name().trim_start_matches(BUS_NAME_PREFIX);
 
     let without_instance = bus_name
         .rsplit_once('.')
@@ -68,7 +66,7 @@ fn is_whitelisted(config: &Config, player: &Player) -> bool {
 /// Wait for any (whitelisted) player to become active again.
 pub fn wait_for_player(config: &Config, finder: &PlayerFinder) -> Player {
     loop {
-        let players = match finder.find_all() {
+        let players = match finder.iter_players() {
             Ok(players) => players,
             _ => {
                 thread::sleep(INIT_WAIT_TIME);
@@ -76,9 +74,12 @@ pub fn wait_for_player(config: &Config, finder: &PlayerFinder) -> Player {
             }
         };
 
+        #[allow(clippy::manual_flatten)]
         for player in players {
-            if is_active(&player) && is_whitelisted(config, &player) {
-                return player;
+            if let Ok(player) = player {
+                if is_active(&player) && is_whitelisted(config, &player) {
+                    return player;
+                }
             }
         }
 

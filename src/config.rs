@@ -61,8 +61,6 @@ pub struct Config {
     #[serde(alias = "lb-token")]
     pub listenbrainz_token: Option<String>,
 
-    pub enable_notifications: Option<bool>,
-
     #[serde(
         default,
         deserialize_with = "deserialize_duration_seconds",
@@ -83,7 +81,6 @@ impl Config {
             lastfm_key: Some(String::new()),
             lastfm_secret: Some(String::new()),
             listenbrainz_token: None,
-            enable_notifications: Some(false),
             min_play_time: Some(Duration::from_secs(0)),
             player_whitelist: Some(HashSet::new()),
             filter_script: Some(PathBuf::new()),

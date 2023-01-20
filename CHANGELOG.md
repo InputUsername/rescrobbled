@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0 (2023-01-20)
+
+- Removed notification functionality
+  - As an alternative, I recommend [mpris-notifier](https://github.com/l1na-forever/mpris-notifier).
+- Made album name optional when submitting to ListenBrainz
+  - ListenBrainz does not require album names for submissions, so they are now optional.
+    This means tracks without `xesam:album` will still be submitted.
+  - The Last.fm library used by rescrobbled still requires the album, but this restriction could
+    be lifted in the future.
+  - This does have the side effect of now treating empty album names (i.e. "")
+    the same as if they were missing from the MPRIS metadata.
+- Updated player finding logic to be more resilient to players that cause errors
+- Moved to OpenSSL/`libssl` version 3
+
 ## v0.6.2 (2022-11-16)
 
 - Fixed scrobbling from applications that report a single string value for `xesam:artist`

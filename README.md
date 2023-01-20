@@ -4,7 +4,7 @@
 [![Crates.io](https://img.shields.io/crates/v/rescrobbled)](https://crates.io/crates/rescrobbled)
 [![CI](https://github.com/InputUsername/rescrobbled/actions/workflows/ci.yml/badge.svg)](https://github.com/InputUsername/rescrobbled/actions/workflows/ci.yml)
 
-Rescrobbled is a music scrobbler daemon. It detects active media players running on D-Bus using `MPRIS`, automatically updates "now playing" status, and scrobbles songs to [Last.fm](https://last.fm) or [ListenBrainz](https://listenbrainz.org)-compatible services as they play.
+Rescrobbled is a music scrobbler daemon. It detects active media players running on D-Bus using [MPRIS](https://specifications.freedesktop.org/mpris-spec/latest/), automatically updates "now playing" status, and scrobbles songs to [Last.fm](https://last.fm) or [ListenBrainz](https://listenbrainz.org)-compatible services as they play.
 
 Among other things, due to sharing a Spotify account (I know, I know), I needed a way to scrobble to Last.fm without connecting the Spotify account to my Last.fm account. Rescrobbled offers a simple solution for this.
 
@@ -12,7 +12,10 @@ Among other things, due to sharing a Spotify account (I know, I know), I needed 
 
 You can download one of the prebuilt binaries [here](https://github.com/InputUsername/rescrobbled/releases). The binary can be placed anywhere you like.
 
-Rescrobbled is available on [Crates.io](https://crates.io/crates/rescrobbled): `cargo install rescrobbled`
+Rescrobbled is available on [crates.io](https://crates.io/crates/rescrobbled):
+```
+cargo install rescrobbled
+```
 
 Alternatively you can install from source using `cargo install --path .` from the crate root.
 
@@ -24,7 +27,6 @@ Rescrobbled expects a configuration file at `~/.config/rescrobbled/config.toml` 
 ```toml
 lastfm-key = "Last.fm API key"
 lastfm-secret = "Last.fm API secret"
-enable-notifications = false
 min-play-time = 0
 player-whitelist = [ "Player MPRIS identity or bus name" ]
 filter-script = "path/to/script"
@@ -42,10 +44,6 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
 
 To use rescrobbled with Last.fm, you'll need a Last.fm API key and secret. These can be obtained [here](https://www.last.fm/api/account/create).
 
-`enable-notifications`
-
-Set this to `true` to show desktop notifications when a song starts playing: useful if your music player does not support notifications. Defaults to `false`.
-
 `min-play-time`
 
 Minimum play time in seconds before a song is scrobbled.
@@ -56,7 +54,7 @@ By default, track submission respects Last.fm's recommended behavior: songs shou
 
 If empty or ommitted, music from all players will be scrobbled; otherwise, rescrobbled will only listen to players in this list.
 
-A CLI application like `playerctl` can be used to determine a player's name for the whitelist. To do so start playing a song and run the following command:
+A CLI application like [playerctl](https://github.com/altdesktop/playerctl) can be used to determine a player's name for the whitelist. To do so, start playing a song and run the following command:
 ```
 playerctl --list-all
 ```
