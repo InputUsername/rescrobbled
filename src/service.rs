@@ -22,6 +22,8 @@ use listenbrainz::ListenBrainz;
 
 use rustfm_scrobble_proxy::{Scrobble, Scrobbler};
 
+use tracing::{error, info, warn};
+
 mod lastfm;
 
 use crate::config::{Config, ListenBrainzConfig};
@@ -80,25 +82,25 @@ impl Service {
 
         match Self::lastfm(config) {
             Ok(Some(lastfm)) => {
-                println!("Authenticated with {} successfully!", lastfm);
+                info!("Authenticated with {} successfully!", lastfm);
                 services.push(lastfm);
             }
-            Err(err) => eprintln!("{:?}", err),
+            Err(err) => error!("{:?}", err),
             _ => {}
         }
 
         for lb in config.listenbrainz.iter().flatten() {
             match Self::listenbrainz(lb) {
                 Ok(service) => {
-                    println!("Authenticated with {} successfully!", service);
+                    info!("Authenticated with {} successfully!", service);
                     services.push(service);
                 }
-                Err(err) => eprintln!("{:?}", err),
+                Err(err) => error!("{:?}", err),
             }
         }
 
         if services.is_empty() {
-            eprintln!("Warning: no scrobbling services defined");
+            warn!("No scrobbling services defined");
         }
 
         services

@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Koen Bolhuis
+// Copyright (C) 2023 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -12,6 +12,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 use std::fs::{self, Permissions};
 use std::io::{self, Write};
 use std::os::unix::fs::PermissionsExt;
@@ -26,8 +27,7 @@ use crate::config::config_dir;
 
 const SESSION_FILE: &str = "session";
 
-/// Authenticate with Last.fm either using an existing
-/// session file or by logging in.
+/// Authenticate with Last.fm either using an existing session file or by logging in.
 pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<()> {
     let mut path = config_dir()?;
     path.push(SESSION_FILE);

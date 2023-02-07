@@ -25,6 +25,8 @@ use anyhow::{anyhow, bail, Context, Result};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
+use tracing::warn;
+
 const CONFIG_DIR: &str = "rescrobbled";
 const CONFIG_FILE: &str = "config.toml";
 
@@ -110,7 +112,7 @@ impl Config {
                     token: self.listenbrainz_token.take().unwrap(),
                 }])
             } else {
-                eprintln!("Warning: both listenbrainz-token and [[listenbrainz]] config options are defined (listenbrainz-token will be ignored)");
+                warn!("Both listenbrainz-token and [[listenbrainz]] config options are defined; listenbrainz-token will be ignored");
             }
 
             self.listenbrainz_token.take();

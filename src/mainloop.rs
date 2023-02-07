@@ -13,12 +13,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use std::fmt::Write;
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
 use anyhow::{anyhow, Context, Result};
 
 use mpris::{PlaybackStatus, PlayerFinder};
+
+use tracing::{error, info};
 
 use crate::config::Config;
 use crate::filter::{filter_metadata, FilterResult};
@@ -46,11 +49,11 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
         .map_err(|err| anyhow!("{}", err))
         .context("Failed to connect to D-Bus")?;
 
-    println!("Looking for an active MPRIS player...");
+    info!("Looking for an active MPRIS player...");
 
     let mut player = player::wait_for_player(&config, &finder);
 
-    println!("Found active player {}", player.identity());
+    info!("Found active player {}", player.identity());
 
     let mut previous_track = Track::default();
 
@@ -61,15 +64,14 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
 
     loop {
         if !player::is_active(&player) {
-            println!(
-                "----\n\
-                Player {} stopped, looking for a new MPRIS player...",
+            info!(
+                "Player {} stopped, looking for a new MPRIS player...",
                 player.identity()
             );
 
             player = player::wait_for_player(&config, &finder);
 
-            println!("Found active player {}", player.identity());
+            info!("Found active player {}", player.identity());
 
             previous_track.clear();
 
@@ -90,7 +92,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                 continue;
             }
             Err(err) => {
-                eprintln!("{:?}", err);
+                error!("{:?}", err);
 
                 thread::sleep(POLL_INTERVAL);
                 continue;
@@ -105,7 +107,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
         let metadata = match metadata {
             Ok(metadata) => metadata,
             Err(err) => {
-                eprintln!("{:?}", err);
+                error!("{:?}", err);
 
                 thread::sleep(POLL_INTERVAL);
                 continue;
@@ -136,14 +138,14 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                             for service in services.iter() {
                                 match service.submit(&track, track_start) {
                                     Ok(()) => {
-                                        println!("Track submitted to {} successfully", service)
+                                        info!("Track submitted to {} successfully", service)
                                     }
-                                    Err(err) => eprintln!("{:?}", err),
+                                    Err(err) => error!("{:?}", err),
                                 }
                             }
                         }
                         Ok(FilterResult::Ignored) => {}
-                        Err(err) => eprintln!("{:?}", err),
+                        Err(err) => error!("{:?}", err),
                     }
 
                     scrobbled_current_song = true;
@@ -167,27 +169,27 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
             scrobbled_current_song = false;
             track_start = SystemTime::now();
 
-            print!(
-                "----\n\
-                Now playing: {} - {}",
+            let mut message = format!(
+                "Now playing: {} - {}",
                 current_track.artist(),
                 current_track.title(),
             );
             if let Some(album) = current_track.album() {
-                println!(" ({album})");
+                writeln!(message, " ({album})")?;
             }
+            info!("{}", message);
 
             match filter_metadata(&config, current_track, &metadata) {
                 Ok(FilterResult::Filtered(track)) | Ok(FilterResult::NotFiltered(track)) => {
                     for service in services.iter() {
                         match service.now_playing(&track) {
-                            Ok(()) => println!("Status updated on {} successfully", service),
-                            Err(err) => eprintln!("{:?}", err),
+                            Ok(()) => info!("Status updated on {} successfully", service),
+                            Err(err) => error!("{:?}", err),
                         }
                     }
                 }
-                Ok(FilterResult::Ignored) => println!("Track ignored"),
-                Err(err) => eprintln!("{:?}", err),
+                Ok(FilterResult::Ignored) => info!("Track ignored"),
+                Err(err) => error!("{:?}", err),
             }
         }
 

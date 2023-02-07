@@ -15,7 +15,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use anyhow::Result;
+use std::env;
+use std::process::ExitCode;
+
+use tracing::{error, info};
 
 mod config;
 mod filter;
@@ -29,22 +32,38 @@ use service::Service;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
-fn main() -> Result<()> {
+fn main() -> ExitCode {
     let arg = std::env::args().nth(1);
 
     if let Some("-v" | "--version") = arg.as_deref() {
         println!("rescrobbled v{VERSION}");
-        return Ok(());
+        return ExitCode::SUCCESS;
     }
 
-    let config = load_config()?;
+    let config = match load_config() {
+        Ok(config) => config,
+        Err(err) => {
+            eprintln!("{err:?}");
+            return ExitCode::SUCCESS;
+        }
+    };
 
     if let Some("config") = arg.as_deref() {
-        println!("{:#?}", config);
-        return Ok(());
+        println!("{config:#?}");
+        return ExitCode::SUCCESS;
     }
+
+    tracing_subscriber::fmt().init();
+
+    info!("rescrobbled v{VERSION}");
 
     let services = Service::initialize_all(&config);
 
-    mainloop::run(config, services)
+    match mainloop::run(config, services) {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(err) => {
+            error!("{}", err);
+            ExitCode::FAILURE
+        }
+    }
 }
