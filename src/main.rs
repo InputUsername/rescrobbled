@@ -47,7 +47,21 @@ fn main() -> ExitCode {
         return ExitCode::SUCCESS;
     }
 
-    tracing_subscriber::fmt().init();
+    let builder = tracing_subscriber::fmt();
+
+    match env::var("INVOCATION_ID") {
+        Ok(_) => {
+            builder.without_time().init();
+        }
+        Err(env::VarError::NotPresent) => {
+            builder.init();
+        }
+        Err(err) => {
+            builder.init();
+            error!("{}", err);
+            return ExitCode::FAILURE;
+        }
+    };
 
     info!("rescrobbled v{VERSION}");
 
