@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Koen Bolhuis
+// Copyright (C) 2023 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,8 @@ use std::time::Duration;
 use anyhow::{anyhow, bail, Context, Result};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+use tracing::warn;
 
 const CONFIG_DIR: &str = "rescrobbled";
 const CONFIG_FILE: &str = "config.toml";
@@ -105,7 +107,7 @@ impl Config {
                     token: self.listenbrainz_token.take().unwrap(),
                 }])
             } else {
-                eprintln!("Warning: both listenbrainz-token and [[listenbrainz]] config options are defined (listenbrainz-token will be ignored)");
+                warn!("Both listenbrainz-token and [[listenbrainz]] config options are defined; listenbrainz-token will be ignored");
             }
 
             self.listenbrainz_token.take();
