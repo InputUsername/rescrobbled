@@ -167,7 +167,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                 current_track.title(),
             );
             if let Some(album) = current_track.album() {
-                writeln!(message, " ({album})")?;
+                write!(message, " ({album})")?;
             }
             info!("{}", message);
 
