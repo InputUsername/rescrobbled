@@ -1,5 +1,9 @@
 # Changelog
 
+## Next (unreleased)
+
+- Made album name optional when submitting to Last.fm
+
 ## 0.7.0 (2023-01-20)
 
 - Removed notification functionality

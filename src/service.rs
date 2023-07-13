@@ -107,11 +107,7 @@ impl Service {
     pub fn now_playing(&self, track: &Track) -> Result<()> {
         match self {
             Self::LastFM(scrobbler) => {
-                let album = track
-                    .album()
-                    .ok_or_else(|| anyhow!("Cannot submit track without album to {self}"))?;
-
-                let scrobble = Scrobble::new(track.artist(), track.title(), album);
+                let scrobble = Scrobble::new(track.artist(), track.title(), track.album());
 
                 scrobbler
                     .now_playing(&scrobble)
@@ -130,11 +126,7 @@ impl Service {
     pub fn submit(&self, track: &Track) -> Result<()> {
         match self {
             Self::LastFM(scrobbler) => {
-                let album = track
-                    .album()
-                    .ok_or_else(|| anyhow!("Cannot submit track without album to {self}"))?;
-
-                let scrobble = Scrobble::new(track.artist(), track.title(), album);
+                let scrobble = Scrobble::new(track.artist(), track.title(), track.album());
 
                 scrobbler
                     .scrobble(&scrobble)
