@@ -1,10 +1,11 @@
 # Changelog
 
-## Next (unreleased)
+## v0.7.1 (2023-07-13)
 
 - Made album name optional when submitting to Last.fm
+- Updated dependencies
 
-## 0.7.0 (2023-01-20)
+## v0.7.0 (2023-01-20)
 
 - Removed notification functionality
   - As an alternative, I recommend [mpris-notifier](https://github.com/l1na-forever/mpris-notifier).
