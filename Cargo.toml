@@ -19,7 +19,7 @@ listenbrainz = "0.7.0"
 serde = { version = "1.0.183", features = ["derive"] }
 toml = "0.7.6"
 dirs = "5.0.1"
-anyhow = "1.0.72"
+anyhow = "1.0.75"
 rpassword = "7.2.0"
 
 [dev-dependencies]
