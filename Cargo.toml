@@ -20,7 +20,7 @@ serde = { version = "1.0.192", features = ["derive"] }
 toml = "0.8.8"
 dirs = "5.0.1"
 anyhow = "1.0.75"
-rpassword = "7.2.0"
+rpassword = "7.3.1"
 
 [dev-dependencies]
 tempfile = "3.8.1"
