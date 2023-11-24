@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 read artist
 read title
