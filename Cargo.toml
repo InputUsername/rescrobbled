@@ -16,7 +16,7 @@ publish = false
 mpris = "2.0.1"
 rustfm-scrobble-proxy = "2.0.0"
 listenbrainz = "0.7.0"
-serde = { version = "1.0.201", features = ["derive"] }
+serde = { version = "1.0.202", features = ["derive"] }
 toml = "0.8.12"
 dirs = "5.0.1"
 anyhow = "1.0.86"
