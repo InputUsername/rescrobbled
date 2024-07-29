@@ -17,7 +17,7 @@ mpris = "2.0.1"
 rustfm-scrobble-proxy = "2.0.0"
 listenbrainz = "0.7.0"
 serde = { version = "1.0.204", features = ["derive"] }
-toml = "0.8.15"
+toml = "0.8.16"
 dirs = "5.0.1"
 anyhow = "1.0.86"
 rpassword = "7.3.1"
