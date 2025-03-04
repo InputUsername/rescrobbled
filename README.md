@@ -40,51 +40,51 @@ All settings are optional, although rescrobbled isn't very useful without Last.f
 
 If the config file doesn't exist, rescrobbled will generate an example config for you when you run it for the first time.
 
-`lastfm-key`, `lastfm-secret`
+- `lastfm-key`, `lastfm-secret`
 
-To use rescrobbled with Last.fm, you'll need a Last.fm API key and secret. These can be obtained [here](https://www.last.fm/api/account/create).
+    To use rescrobbled with Last.fm, you'll need a Last.fm API key and secret. These can be obtained [here](https://www.last.fm/api/account/create).
 
-`min-play-time`
+- `min-play-time`
 
-Minimum play time in seconds before a song is scrobbled.
+    Minimum play time in seconds before a song is scrobbled.
 
-By default, track submission respects Last.fm's recommended behavior: songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using `min-play-time` you can override this.
+    By default, track submission respects Last.fm's recommended behavior: songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using `min-play-time` you can override this.
 
-`player-whitelist`
+- `player-whitelist`
 
-If empty or ommitted, music from all players will be scrobbled; otherwise, rescrobbled will only listen to players in this list.
+    If empty or ommitted, music from all players will be scrobbled; otherwise, rescrobbled will only listen to players in this list.
 
-A CLI application like [playerctl](https://github.com/altdesktop/playerctl) can be used to determine a player's name for the whitelist. To do so, start playing a song and run the following command:
-```
-playerctl --list-all
-```
+    A CLI application like [playerctl](https://github.com/altdesktop/playerctl) can be used to determine a player's name for the whitelist. To do so, start playing a song and run the following command:
+    ```
+    playerctl --list-all
+    ```
 
-`filter-script`
+- `filter-script`
 
-The `filter-script` will be run before updating status and before submitting tracks.
-It receives the following properties on consecutive lines of its standard input (separated by `\n`):
-- artist;
-- song title;
-- album name;
-- zero or more comma-separated (`,`) genre(s)
+    The `filter-script` will be run before updating status and before submitting tracks.
+    It receives the following properties on consecutive lines of its standard input (separated by `\n`):
+    - artist;
+    - song title;
+    - album name;
+    - zero or more comma-separated (`,`) genre(s)
 
-The script should write the filtered artist, song title and album name on corresponding lines of
-its standard output.
-This can be used to clean up song names, for example removing "remastered" and similar suffixes.
-If the filter script does not return any output, the current track will be ignored.
+    The script should write the filtered artist, song title and album name on corresponding lines of
+    its standard output.
+    This can be used to clean up song names, for example removing "remastered" and similar suffixes.
+    If the filter script does not return any output, the current track will be ignored.
 
-A number of example scripts can be found in the [`filter-script-examples`](https://github.com/InputUsername/rescrobbled/tree/master/filter-script-examples) directory.
+    A number of example scripts can be found in the [`filter-script-examples`](https://github.com/InputUsername/rescrobbled/tree/master/filter-script-examples) directory.
 
-`[[listenbrainz]]`
+- `[[listenbrainz]]`
 
-You can specify one or more ListenBrainz instances by repeating this option. Each definition needs at least a `token`. You can set `url` to use a custom API URL (eg. for use with custom ListenBrainz instances or services like [Maloja](https://github.com/krateng/maloja)). If the URL is not provided, it defaults to the ListenBrainz.org instance.
+    You can specify one or more ListenBrainz instances by repeating this option. Each definition needs at least a `token`. You can set `url` to use a custom API URL (eg. for use with custom ListenBrainz instances or services like [Maloja](https://github.com/krateng/maloja)). If the URL is not provided, it defaults to the ListenBrainz.org instance.
 
-If you only want to use ListenBrainz.org, you can set the `listenbrainz-token` option as a shorthand instead.
+    If you only want to use ListenBrainz.org, you can set the `listenbrainz-token` option as a shorthand instead.
 
-For ListenBrainz.org, the user token can be found [here](https://listenbrainz.org/profile/). Other services might do this differently, refer to their documentation for more info.
+    For ListenBrainz.org, the user token can be found [here](https://listenbrainz.org/profile/). Other services might do this differently, refer to their documentation for more info.
 
-> [!NOTE]
-> Due to the way TOML works, these need to be the last thing in your config file.
+    > [!NOTE]
+    > Due to the way TOML works, these need to be the last thing in your config file.
 
 ## Usage
 
