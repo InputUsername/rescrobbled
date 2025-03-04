@@ -121,7 +121,7 @@ mod tests {
         let temp_dir = tempfile::tempdir().unwrap();
 
         let path = temp_dir.path().join("filter.sh");
-        const FILTER_SCRIPT: &str = "#!/usr/bin/bash
+        const FILTER_SCRIPT: &str = "#!/usr/bin/env sh
 read artist
 read title
 read album
@@ -151,7 +151,7 @@ echo \"Album=$album\"
         // Script that produces no output should result in `FilterResult::Ignored`
 
         let path_ignore = temp_dir.path().join("filter_ignore.sh");
-        const FILTER_SCRIPT_IGNORE: &str = "#!/usr/bin/bash
+        const FILTER_SCRIPT_IGNORE: &str = "#!/usr/bin/env sh
 true
 ";
 
@@ -186,7 +186,7 @@ true
         // Album should be optional, empty album should still result in `FilterResult::Filtered`
 
         let path_no_album = temp_dir.path().join("filter_no_album.sh");
-        const FILTER_SCRIPT_NO_ALBUM: &str = "#!/usr/bin/bash
+        const FILTER_SCRIPT_NO_ALBUM: &str = "#!/usr/bin/env sh
 read artist
 read title
 read album

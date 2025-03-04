@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.7.2 (2025-03-04)
+
+- Updated dependencies
+
 ## v0.7.1 (2023-07-13)
 
 - Made album name optional when submitting to Last.fm
