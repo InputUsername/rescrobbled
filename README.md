@@ -83,7 +83,8 @@ If you only want to use ListenBrainz.org, you can set the `listenbrainz-token` o
 
 For ListenBrainz.org, the user token can be found [here](https://listenbrainz.org/profile/). Other services might do this differently, refer to their documentation for more info.
 
-*Note: due to the way TOML works, these need to be the last thing in your config file.*
+> [!NOTE]
+> Due to the way TOML works, these need to be the last thing in your config file.
 
 ## Usage
 
