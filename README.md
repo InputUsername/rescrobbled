@@ -83,8 +83,8 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
 
     For ListenBrainz.org, the user token can be found [here](https://listenbrainz.org/profile/). Other services might do this differently, refer to their documentation for more info.
 
-    > [!NOTE]
-    > Due to the way TOML works, these need to be the last thing in your config file.
+> [!NOTE]
+> Due to the way TOML works, the `[[listenbrainz]]` definitions need to be the last thing in your config file.
 
 ## Usage
 
