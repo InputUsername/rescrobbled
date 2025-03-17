@@ -23,4 +23,4 @@ anyhow = "1.0.97"
 rpassword = "7.3.1"
 
 [dev-dependencies]
-tempfile = "3.18.0"
+tempfile = "3.19.0"
