@@ -14,6 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::fmt::{self, Write};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use anyhow::{anyhow, Context, Result};
 
@@ -123,10 +124,16 @@ impl Service {
     }
 
     /// Scrobble a track.
-    pub fn submit(&self, track: &Track) -> Result<()> {
+    pub fn submit(&self, track: &Track, track_start: &SystemTime) -> Result<()> {
         match self {
             Self::LastFM(scrobbler) => {
-                let scrobble = Scrobble::new(track.artist(), track.title(), track.album());
+                let mut scrobble = Scrobble::new(track.artist(), track.title(), track.album());
+
+                let timestamp = track_start
+                    .duration_since(UNIX_EPOCH)
+                    .context("Track started before UNIX epoch")?;
+
+                scrobble.with_timestamp(timestamp.as_secs());
 
                 scrobbler
                     .scrobble(&scrobble)
