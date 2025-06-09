@@ -125,11 +125,16 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                 if length.map(|length| length > MIN_LENGTH).unwrap_or(true)
                     && current_play_time > min_play_time
                 {
+                    let track_start = config
+                        .use_track_start_timestamp
+                        .unwrap_or(false)
+                        .then_some(&track_start);
+
                     match filter_metadata(&config, current_track, &metadata) {
                         Ok(FilterResult::Filtered(track))
                         | Ok(FilterResult::NotFiltered(track)) => {
                             for service in services.iter() {
-                                match service.submit(&track, &track_start) {
+                                match service.submit(&track, track_start) {
                                     Ok(()) => {
                                         println!("Track submitted to {} successfully", service)
                                     }
