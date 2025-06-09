@@ -72,6 +72,8 @@ pub struct Config {
 
     pub filter_script: Option<PathBuf>,
 
+    pub use_track_start_timestamp: Option<bool>,
+
     pub listenbrainz: Option<Vec<ListenBrainzConfig>>,
 }
 
@@ -84,6 +86,7 @@ impl Config {
             min_play_time: Some(Duration::from_secs(0)),
             player_whitelist: Some(HashSet::new()),
             filter_script: Some(PathBuf::new()),
+            use_track_start_timestamp: Some(false),
             listenbrainz: Some(vec![ListenBrainzConfig {
                 url: Some(String::new()),
                 token: String::new(),

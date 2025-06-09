@@ -124,16 +124,18 @@ impl Service {
     }
 
     /// Scrobble a track.
-    pub fn submit(&self, track: &Track, track_start: &SystemTime) -> Result<()> {
+    pub fn submit(&self, track: &Track, track_start: Option<&SystemTime>) -> Result<()> {
         match self {
             Self::LastFM(scrobbler) => {
                 let mut scrobble = Scrobble::new(track.artist(), track.title(), track.album());
 
-                let timestamp = track_start
-                    .duration_since(UNIX_EPOCH)
-                    .context("Track started before UNIX epoch")?;
+                if let Some(track_start) = track_start {
+                    let timestamp = track_start
+                        .duration_since(UNIX_EPOCH)
+                        .context("Track started before UNIX epoch")?;
 
-                scrobble.with_timestamp(timestamp.as_secs());
+                    scrobble.with_timestamp(timestamp.as_secs());
+                }
 
                 scrobbler
                     .scrobble(&scrobble)
