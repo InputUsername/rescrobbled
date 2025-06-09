@@ -14,9 +14,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::collections::HashSet;
+use std::env::{self, VarError};
 use std::fs::{self, Permissions};
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::time::Duration;
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -129,6 +131,29 @@ pub fn config_dir() -> Result<PathBuf> {
     Ok(path)
 }
 
+fn get_envvar<T: FromStr>(name: &str) -> Result<Option<T>>
+where
+    <T as FromStr>::Err: std::fmt::Display,
+{
+    match env::var(name) {
+        Ok(value) => value.parse().map(Some).map_err(|err| anyhow!("{err}")),
+        Err(VarError::NotPresent) => Ok(None),
+        Err(err) => Err(anyhow!("{err}")),
+    }
+}
+
+fn load_from_environment(config: &mut Config) -> Result<()> {
+    config.lastfm_key = get_envvar("LASTFM_KEY")?;
+    config.lastfm_secret = get_envvar("LASTFM_SECRET")?;
+    config.listenbrainz_token = get_envvar("LISTENBRAINZ_TOKEN")?;
+    config.min_play_time =
+        get_envvar::<u64>("MIN_PLAY_TIME").map(|t| t.map(Duration::from_secs))?;
+    config.filter_script = get_envvar("FILTER_SCRIPT")?;
+    config.use_track_start_timestamp = get_envvar("USE_TRACK_START_TIMESTAMP")?;
+
+    Ok(())
+}
+
 pub fn load_config() -> Result<Config> {
     let mut path = config_dir()?;
 
@@ -148,6 +173,8 @@ pub fn load_config() -> Result<Config> {
     let buffer = fs::read_to_string(&path).context("Failed to open config file")?;
 
     let mut config: Config = toml::from_str(&buffer).context("Failed to parse config file")?;
+
+    load_from_environment(&mut config)?;
 
     config.normalize();
 
