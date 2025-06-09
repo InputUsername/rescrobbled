@@ -30,6 +30,7 @@ lastfm-secret = "Last.fm API secret"
 min-play-time = 0
 player-whitelist = [ "Player MPRIS identity or bus name" ]
 filter-script = "path/to/script"
+use-track-start-timestamp = false
 
 [[listenbrainz]]
 url = "Custom API URL"
@@ -74,6 +75,10 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
     If the filter script does not return any output, the current track will be ignored.
 
     A number of example scripts can be found in the [`filter-script-examples`](https://github.com/InputUsername/rescrobbled/tree/master/filter-script-examples) directory.
+
+- `use-track-start-timestamp`
+
+    By default, tracks are submitted with a timestamp of the submission time. By setting `use-track-start-timestamp` to `true`, tracks are instead submitted with the time the track originally started playing. This is currently Last.fm-only.
 
 - `[[listenbrainz]]`
 
