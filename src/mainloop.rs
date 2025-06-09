@@ -165,6 +165,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
             timer = Instant::now();
             current_play_time = Duration::from_secs(0);
             scrobbled_current_song = false;
+            track_start = SystemTime::now();
 
             print!(
                 "----\n\
