@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.0 (unreleased)
+
+- Added the `use_track_start_timestamp` option, allowing tracks to be recorded with a timestamp
+  of when the track started playing, instead of submission time
+  - This currently only works for Last.fm, but may be added for ListenBrainz in in the future as well
+- Updated dependencies
+
 ## v0.7.2 (2025-03-04)
 
 - Updated dependencies
