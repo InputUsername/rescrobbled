@@ -5,6 +5,15 @@
 - Added the `use_track_start_timestamp` option, allowing tracks to be recorded with a timestamp
   of when the track started playing, instead of submission time
   - This currently only works for Last.fm, but may be added for ListenBrainz in in the future as well
+- Allow overriding config options with environment variables. Currently supported options:
+  | Option | Environment variable |
+  |---|---|
+  | `lastfm-key`, `lastfm-secret` | `LASTFM_KEY`, `LASTFM_SECRET` |
+  | `listenbrainz-token` | `LISTENBRAINZ_TOKEN` |
+  | `min-play-time` | `MIN_PLAY_TIME` |
+  | `filter-script` | `FILTER_SCRIPT` |
+  | `use-track-start-timestamp` | `USE_TRACK_START_TIMESTAMP` |
+  Not supported: `player-whitelist`, `[[listenbrainz]]`
 - Updated dependencies
 
 ## v0.7.2 (2025-03-04)
