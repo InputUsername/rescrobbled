@@ -131,8 +131,9 @@ pub fn config_dir() -> Result<PathBuf> {
     Ok(path)
 }
 
-fn get_envvar<T: FromStr>(name: &str) -> Result<Option<T>>
+fn get_envvar<T>(name: &str) -> Result<Option<T>>
 where
+    T: FromStr,
     <T as FromStr>::Err: std::fmt::Display,
 {
     match env::var(name) {
@@ -142,14 +143,28 @@ where
     }
 }
 
+fn replace_if_some<T>(option: &mut Option<T>, replacement: Option<T>) {
+    if replacement.is_some() {
+        *option = replacement;
+    }
+}
+
 fn load_from_environment(config: &mut Config) -> Result<()> {
-    config.lastfm_key = get_envvar("LASTFM_KEY")?;
-    config.lastfm_secret = get_envvar("LASTFM_SECRET")?;
-    config.listenbrainz_token = get_envvar("LISTENBRAINZ_TOKEN")?;
-    config.min_play_time =
-        get_envvar::<u64>("MIN_PLAY_TIME").map(|t| t.map(Duration::from_secs))?;
-    config.filter_script = get_envvar("FILTER_SCRIPT")?;
-    config.use_track_start_timestamp = get_envvar("USE_TRACK_START_TIMESTAMP")?;
+    replace_if_some(&mut config.lastfm_key, get_envvar("LASTFM_KEY")?);
+    replace_if_some(&mut config.lastfm_secret, get_envvar("LASTFM_SECRET")?);
+    replace_if_some(
+        &mut config.listenbrainz_token,
+        get_envvar("LISTENBRAINZ_TOKEN")?,
+    );
+    replace_if_some(
+        &mut config.min_play_time,
+        get_envvar::<u64>("MIN_PLAY_TIME").map(|t| t.map(Duration::from_secs))?,
+    );
+    replace_if_some(&mut config.filter_script, get_envvar("FILTER_SCRIPT")?);
+    replace_if_some(
+        &mut config.use_track_start_timestamp,
+        get_envvar("USE_TRACK_START_TIMESTAMP")?,
+    );
 
     Ok(())
 }
