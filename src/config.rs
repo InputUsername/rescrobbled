@@ -198,6 +198,8 @@ pub fn load_config() -> Result<Config> {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use super::*;
 
     #[test]
@@ -235,5 +237,32 @@ mod tests {
 
         assert!(config.listenbrainz_token.is_none());
         assert!(config.listenbrainz.is_some());
+    }
+
+    #[test]
+    fn test_override_from_environment() {
+        let mut config = Config::default();
+
+        std::env::set_var("LASTFM_KEY", "lastfm_key_123");
+        std::env::set_var("LASTFM_SECRET", "lastfm_secret_456");
+        std::env::set_var("LISTENBRAINZ_TOKEN", "listenbrainz_token_xyz");
+        std::env::set_var("MIN_PLAY_TIME", "30");
+        std::env::set_var("FILTER_SCRIPT", "/tmp/filter.sh");
+        std::env::set_var("USE_TRACK_START_TIMESTAMP", "true");
+
+        override_from_environment(&mut config).unwrap();
+
+        assert_eq!(config.lastfm_key.as_deref(), Some("lastfm_key_123"));
+        assert_eq!(config.lastfm_secret.as_deref(), Some("lastfm_secret_456"));
+        assert_eq!(
+            config.listenbrainz_token.as_deref(),
+            Some("listenbrainz_token_xyz")
+        );
+        assert_eq!(config.min_play_time, Some(Duration::from_secs(30)));
+        assert_eq!(
+            config.filter_script.as_deref(),
+            Some(Path::new("/tmp/filter.sh"))
+        );
+        assert_eq!(config.use_track_start_timestamp, Some(true));
     }
 }
