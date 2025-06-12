@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.8.0 (unreleased)
+## v0.8.0 (2025-06-12)
 
 - Added the `use_track_start_timestamp` option, allowing tracks to be recorded with a timestamp
   of when the track started playing, instead of submission time
