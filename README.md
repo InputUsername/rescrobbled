@@ -91,6 +91,15 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
 > [!NOTE]
 > Due to the way TOML works, the `[[listenbrainz]]` definitions need to be the last thing in your config file.
 
+Options can also be overridden using environment variables. The following variables are supported:
+| Option | Environment variable |
+|---|---|
+| `lastfm-key`, `lastfm-secret` | `LASTFM_KEY`, `LASTFM_SECRET` |
+| `listenbrainz-token` | `LISTENBRAINZ_TOKEN` |
+| `min-play-time` | `MIN_PLAY_TIME` |
+| `filter-script` | `FILTER_SCRIPT` |
+| `use-track-start-timestamp` | `USE_TRACK_START_TIMESTAMP` |
+
 ## Usage
 
 To make sure that rescrobbled can scrobble to Last.fm, you need to run the program in a terminal. This will prompt you for your Last.fm username and password, and authenticate with Last.fm. A long-lasting session token is then obtained, which will be used on subsequent runs instead of your username/password. The session token is stored in `~/.config/rescrobbled/session`.
