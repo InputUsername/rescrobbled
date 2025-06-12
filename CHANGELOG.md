@@ -14,6 +14,7 @@
   | `filter-script` | `FILTER_SCRIPT` |
   | `use-track-start-timestamp` | `USE_TRACK_START_TIMESTAMP` |
   Not supported: `player-whitelist`, `[[listenbrainz]]`
+- Added the `config` subcommand to show the effective config
 - Updated dependencies
 
 ## v0.7.2 (2025-03-04)
