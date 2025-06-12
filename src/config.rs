@@ -149,7 +149,7 @@ fn replace_if_some<T>(option: &mut Option<T>, replacement: Option<T>) {
     }
 }
 
-fn load_from_environment(config: &mut Config) -> Result<()> {
+fn override_from_environment(config: &mut Config) -> Result<()> {
     replace_if_some(&mut config.lastfm_key, get_envvar("LASTFM_KEY")?);
     replace_if_some(&mut config.lastfm_secret, get_envvar("LASTFM_SECRET")?);
     replace_if_some(
@@ -189,7 +189,7 @@ pub fn load_config() -> Result<Config> {
 
     let mut config: Config = toml::from_str(&buffer).context("Failed to parse config file")?;
 
-    load_from_environment(&mut config)?;
+    override_from_environment(&mut config)?;
 
     config.normalize();
 
