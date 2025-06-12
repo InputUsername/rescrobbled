@@ -30,6 +30,7 @@ lastfm-secret = "Last.fm API secret"
 min-play-time = 0
 player-whitelist = [ "Player MPRIS identity or bus name" ]
 filter-script = "path/to/script"
+use-track-start-timestamp = false
 
 [[listenbrainz]]
 url = "Custom API URL"
@@ -75,6 +76,10 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
 
     A number of example scripts can be found in the [`filter-script-examples`](https://github.com/InputUsername/rescrobbled/tree/master/filter-script-examples) directory.
 
+- `use-track-start-timestamp`
+
+    By default, tracks are submitted with a timestamp of the submission time. By setting `use-track-start-timestamp` to `true`, tracks are instead submitted with the time the track originally started playing. This is currently Last.fm-only.
+
 - `[[listenbrainz]]`
 
     You can specify one or more ListenBrainz instances by repeating this option. Each definition needs at least a `token`. You can set `url` to use a custom API URL (eg. for use with custom ListenBrainz instances or services like [Maloja](https://github.com/krateng/maloja)). If the URL is not provided, it defaults to the ListenBrainz.org instance.
@@ -85,6 +90,15 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
 
 > [!NOTE]
 > Due to the way TOML works, the `[[listenbrainz]]` definitions need to be the last thing in your config file.
+
+Options can also be overridden using environment variables. The following variables are supported:
+| Option | Environment variable |
+|---|---|
+| `lastfm-key`, `lastfm-secret` | `LASTFM_KEY`, `LASTFM_SECRET` |
+| `listenbrainz-token` | `LISTENBRAINZ_TOKEN` |
+| `min-play-time` | `MIN_PLAY_TIME` |
+| `filter-script` | `FILTER_SCRIPT` |
+| `use-track-start-timestamp` | `USE_TRACK_START_TIMESTAMP` |
 
 ## Usage
 

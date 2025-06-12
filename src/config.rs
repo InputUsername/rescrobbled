@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Koen Bolhuis
+// Copyright (C) 2025 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -14,9 +14,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::collections::HashSet;
+use std::env::{self, VarError};
 use std::fs::{self, Permissions};
 use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::time::Duration;
 
 use anyhow::{anyhow, bail, Context, Result};
@@ -72,6 +74,8 @@ pub struct Config {
 
     pub filter_script: Option<PathBuf>,
 
+    pub use_track_start_timestamp: Option<bool>,
+
     pub listenbrainz: Option<Vec<ListenBrainzConfig>>,
 }
 
@@ -84,6 +88,7 @@ impl Config {
             min_play_time: Some(Duration::from_secs(0)),
             player_whitelist: Some(HashSet::new()),
             filter_script: Some(PathBuf::new()),
+            use_track_start_timestamp: Some(false),
             listenbrainz: Some(vec![ListenBrainzConfig {
                 url: Some(String::new()),
                 token: String::new(),
@@ -126,6 +131,44 @@ pub fn config_dir() -> Result<PathBuf> {
     Ok(path)
 }
 
+fn get_envvar<T>(name: &str) -> Result<Option<T>>
+where
+    T: FromStr,
+    <T as FromStr>::Err: std::fmt::Display,
+{
+    match env::var(name) {
+        Ok(value) => value.parse().map(Some).map_err(|err| anyhow!("{err}")),
+        Err(VarError::NotPresent) => Ok(None),
+        Err(err) => Err(anyhow!("{err}")),
+    }
+}
+
+fn replace_if_some<T>(option: &mut Option<T>, replacement: Option<T>) {
+    if replacement.is_some() {
+        *option = replacement;
+    }
+}
+
+fn override_from_environment(config: &mut Config) -> Result<()> {
+    replace_if_some(&mut config.lastfm_key, get_envvar("LASTFM_KEY")?);
+    replace_if_some(&mut config.lastfm_secret, get_envvar("LASTFM_SECRET")?);
+    replace_if_some(
+        &mut config.listenbrainz_token,
+        get_envvar("LISTENBRAINZ_TOKEN")?,
+    );
+    replace_if_some(
+        &mut config.min_play_time,
+        get_envvar::<u64>("MIN_PLAY_TIME").map(|t| t.map(Duration::from_secs))?,
+    );
+    replace_if_some(&mut config.filter_script, get_envvar("FILTER_SCRIPT")?);
+    replace_if_some(
+        &mut config.use_track_start_timestamp,
+        get_envvar("USE_TRACK_START_TIMESTAMP")?,
+    );
+
+    Ok(())
+}
+
 pub fn load_config() -> Result<Config> {
     let mut path = config_dir()?;
 
@@ -146,6 +189,8 @@ pub fn load_config() -> Result<Config> {
 
     let mut config: Config = toml::from_str(&buffer).context("Failed to parse config file")?;
 
+    override_from_environment(&mut config)?;
+
     config.normalize();
 
     Ok(config)
@@ -153,6 +198,8 @@ pub fn load_config() -> Result<Config> {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use super::*;
 
     #[test]
@@ -190,5 +237,32 @@ mod tests {
 
         assert!(config.listenbrainz_token.is_none());
         assert!(config.listenbrainz.is_some());
+    }
+
+    #[test]
+    fn test_override_from_environment() {
+        let mut config = Config::default();
+
+        std::env::set_var("LASTFM_KEY", "lastfm_key_123");
+        std::env::set_var("LASTFM_SECRET", "lastfm_secret_456");
+        std::env::set_var("LISTENBRAINZ_TOKEN", "listenbrainz_token_xyz");
+        std::env::set_var("MIN_PLAY_TIME", "30");
+        std::env::set_var("FILTER_SCRIPT", "/tmp/filter.sh");
+        std::env::set_var("USE_TRACK_START_TIMESTAMP", "true");
+
+        override_from_environment(&mut config).unwrap();
+
+        assert_eq!(config.lastfm_key.as_deref(), Some("lastfm_key_123"));
+        assert_eq!(config.lastfm_secret.as_deref(), Some("lastfm_secret_456"));
+        assert_eq!(
+            config.listenbrainz_token.as_deref(),
+            Some("listenbrainz_token_xyz")
+        );
+        assert_eq!(config.min_play_time, Some(Duration::from_secs(30)));
+        assert_eq!(
+            config.filter_script.as_deref(),
+            Some(Path::new("/tmp/filter.sh"))
+        );
+        assert_eq!(config.use_track_start_timestamp, Some(true));
     }
 }

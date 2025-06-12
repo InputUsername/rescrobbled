@@ -14,7 +14,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime};
 
 use anyhow::{anyhow, Context, Result};
 
@@ -57,6 +57,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
     let mut timer = Instant::now();
     let mut current_play_time = Duration::from_secs(0);
     let mut scrobbled_current_song = false;
+    let mut track_start = SystemTime::now();
 
     loop {
         if !player::is_active(&player) {
@@ -124,11 +125,16 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
                 if length.map(|length| length > MIN_LENGTH).unwrap_or(true)
                     && current_play_time > min_play_time
                 {
+                    let track_start = config
+                        .use_track_start_timestamp
+                        .unwrap_or(false)
+                        .then_some(&track_start);
+
                     match filter_metadata(&config, current_track, &metadata) {
                         Ok(FilterResult::Filtered(track))
                         | Ok(FilterResult::NotFiltered(track)) => {
                             for service in services.iter() {
-                                match service.submit(&track) {
+                                match service.submit(&track, track_start) {
                                     Ok(()) => {
                                         println!("Track submitted to {} successfully", service)
                                     }
@@ -148,6 +154,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
             {
                 current_play_time = Duration::from_secs(0);
                 scrobbled_current_song = false;
+                track_start = SystemTime::now();
             }
 
             current_play_time += timer.elapsed();
@@ -158,6 +165,7 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
             timer = Instant::now();
             current_play_time = Duration::from_secs(0);
             scrobbled_current_song = false;
+            track_start = SystemTime::now();
 
             print!(
                 "----\n\
