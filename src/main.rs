@@ -24,6 +24,7 @@ mod mainloop;
 mod player;
 mod service;
 mod track;
+mod retry_timer;
 
 use config::load_config;
 

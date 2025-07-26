@@ -41,7 +41,7 @@ fn get_min_play_time(config: &Config, track_length: Duration) -> Duration {
     })
 }
 
-pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
+pub fn run(config: Config, mut services: Vec<Service>) -> Result<()> {
     let finder = PlayerFinder::new()
         .map_err(|err| anyhow!("{}", err))
         .context("Failed to connect to D-Bus")?;
@@ -60,6 +60,14 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
     let mut track_start = SystemTime::now();
 
     loop {
+        for service in &mut services {
+            if service.should_retry_connect() {
+                if let Err(err) = service.connect() {
+                    eprintln!("{:?}", err.context("Connection retry failed"));
+                }
+            }
+        }
+
         if !player::is_active(&player) {
             println!(
                 "----\n\

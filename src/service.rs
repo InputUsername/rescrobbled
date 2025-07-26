@@ -1,11 +1,9 @@
 use std::{fmt::Display, time::SystemTime};
 
-use anyhow::{bail, Result};
+use anyhow::{bail, Context, Result};
 
 use crate::{
-    config::{Config, ListenBrainzConfig},
-    connection::{LastFMConnection, ListenBrainzConnection, ServiceConnection},
-    track::Track,
+    config::{Config, ListenBrainzConfig}, connection::{LastFMConnection, ListenBrainzConnection, ServiceConnection}, retry_timer::RetryTimer, track::Track
 };
 
 enum ConnectionSettings {
@@ -45,6 +43,7 @@ impl Display for ConnectionSettings {
 pub struct Service {
     connection: Option<Box<dyn ServiceConnection>>,
     settings: ConnectionSettings,
+    retry_timer: RetryTimer,
 }
 
 impl Service {
@@ -52,6 +51,7 @@ impl Service {
         Self {
             connection: None,
             settings,
+            retry_timer: RetryTimer::new()
         }
     }
 
@@ -83,9 +83,24 @@ impl Service {
             return Ok(());
         }
 
-        let connection = self.settings.connect()?;
+        let connection = match self.settings.connect() {
+            Ok(connection) => connection,
+            Err(err) => {
+                self.retry_timer.post_failure();
+                return Err(err).with_context(|| format!("Connection failed, next retry in {}s", self.retry_timer.seconds_to_wait()));
+            }
+        };
+        self.retry_timer.post_success();
         self.connection = Some(connection);
         Ok(())
+    }
+
+    /// Return true if `connect` should be called to try to fix a disconnected session
+    pub fn should_retry_connect(&self) -> bool {
+        if self.connection.is_some() {
+            return false;
+        }
+        return self.retry_timer.should_retry();
     }
 
     /// Submit a "now playing" request.
