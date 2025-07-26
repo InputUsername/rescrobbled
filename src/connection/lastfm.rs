@@ -73,7 +73,7 @@ pub struct LastFMConnection {
 
 impl LastFMConnection {
     /// Try to connect to Last.fm.
-    pub fn new(config: &Config) -> Result<Option<Self>> {
+    pub fn new(config: &Config) -> Result<Self> {
         match (&config.lastfm_key, &config.lastfm_secret) {
             (Some(key), Some(secret)) => {
                 let mut scrobbler = Scrobbler::new(key, secret);
@@ -81,11 +81,15 @@ impl LastFMConnection {
                 lastfm::authenticate(&mut scrobbler)
                     .context("Failed to authenticate with Last.fm")?;
 
-                Ok(Some(Self { scrobbler }))
+                Ok(Self { scrobbler })
             }
-            (None, None) => Ok(None),
             _ => Err(anyhow!("Last.fm API key or API secret are missing")),
         }
+    }
+
+    /// Return true if connecting to Last.fm should be attempted
+    pub fn is_configured(config: &Config) -> bool {
+        config.lastfm_key.is_some() || config.lastfm_secret.is_some()
     }
 }
 

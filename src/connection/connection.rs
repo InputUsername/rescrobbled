@@ -18,9 +18,6 @@ use std::time::SystemTime;
 
 use anyhow::Result;
 
-use crate::connection::{LastFMConnection, ListenBrainzConnection};
-
-use crate::config::Config;
 use crate::track::Track;
 
 pub trait ServiceConnection: Display {
@@ -28,34 +25,4 @@ pub trait ServiceConnection: Display {
     fn now_playing(&self, track: &Track) -> Result<()>;
     /// Scrobble a track.
     fn submit(&self, track: &Track, track_start: Option<&SystemTime>) -> Result<()>;
-}
-
-/// Initialize all services specified in the config.
-pub fn initialize_all(config: &Config) -> Vec<Box<dyn ServiceConnection>> {
-    let mut services: Vec<Box<dyn ServiceConnection>> = Vec::new();
-
-    match LastFMConnection::new(config) {
-        Ok(Some(lastfm)) => {
-            println!("Authenticated with {} successfully!", lastfm);
-            services.push(Box::new(lastfm));
-        }
-        Err(err) => eprintln!("{:?}", err),
-        _ => {}
-    }
-
-    for lb in config.listenbrainz.iter().flatten() {
-        match ListenBrainzConnection::new(lb) {
-            Ok(service) => {
-                println!("Authenticated with {} successfully!", service);
-                services.push(Box::new(service));
-            }
-            Err(err) => eprintln!("{:?}", err),
-        }
-    }
-
-    if services.is_empty() {
-        eprintln!("Warning: no scrobbling services defined");
-    }
-
-    services
 }

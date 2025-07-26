@@ -20,4 +20,4 @@ mod listenbrainz;
 pub use listenbrainz::ListenBrainzConnection;
 
 mod connection;
-pub use connection::{initialize_all, ServiceConnection};
+pub use connection::ServiceConnection;

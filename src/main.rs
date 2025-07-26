@@ -18,14 +18,16 @@
 use anyhow::Result;
 
 mod config;
+mod connection;
 mod filter;
 mod mainloop;
 mod player;
+mod service;
 mod track;
-mod connection;
 
 use config::load_config;
-use connection::initialize_all;
+
+use crate::service::Service;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
@@ -44,7 +46,12 @@ fn main() -> Result<()> {
         return Ok(());
     }
 
-    let services = initialize_all(&config);
+    let mut services = Service::instanciate_all(&config);
+    for service in &mut services {
+        if let Err(err) = service.connect() {
+            eprintln!("{:?}", err)
+        }
+    }
 
     mainloop::run(config, services)
 }

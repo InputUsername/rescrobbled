@@ -23,7 +23,7 @@ use mpris::{PlaybackStatus, PlayerFinder};
 use crate::config::Config;
 use crate::filter::{filter_metadata, FilterResult};
 use crate::player;
-use crate::connection::ServiceConnection;
+use crate::service::Service;
 use crate::track::Track;
 
 const POLL_INTERVAL: Duration = Duration::from_millis(500);
@@ -41,7 +41,7 @@ fn get_min_play_time(config: &Config, track_length: Duration) -> Duration {
     })
 }
 
-pub fn run(config: Config, services: Vec<Box<dyn ServiceConnection>>) -> Result<()> {
+pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
     let finder = PlayerFinder::new()
         .map_err(|err| anyhow!("{}", err))
         .context("Failed to connect to D-Bus")?;
