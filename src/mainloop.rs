@@ -41,7 +41,7 @@ fn get_min_play_time(config: &Config, track_length: Duration) -> Duration {
     })
 }
 
-pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
+pub fn run(config: Config, services: Vec<Box<dyn Service>>) -> Result<()> {
     let finder = PlayerFinder::new()
         .map_err(|err| anyhow!("{}", err))
         .context("Failed to connect to D-Bus")?;

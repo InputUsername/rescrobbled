@@ -1,5 +1,3 @@
-// Rescrobbled is an MPRIS music scrobbler daemon.
-//
 // Copyright (C) 2025 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
@@ -15,36 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use anyhow::Result;
+mod lastfm;
+pub use lastfm::LastFMService;
 
-mod config;
-mod filter;
-mod mainloop;
-mod player;
+mod listenbrainz;
+pub use listenbrainz::ListenBrainzService;
+
 mod service;
-mod track;
-
-use config::load_config;
-use service::initialize_all;
-
-const VERSION: &str = env!("CARGO_PKG_VERSION");
-
-fn main() -> Result<()> {
-    let arg = std::env::args().nth(1);
-
-    if let Some("-v" | "--version") = arg.as_deref() {
-        println!("rescrobbled v{VERSION}");
-        return Ok(());
-    }
-
-    let config = load_config()?;
-
-    if let Some("config") = arg.as_deref() {
-        println!("{:#?}", config);
-        return Ok(());
-    }
-
-    let services = initialize_all(&config);
-
-    mainloop::run(config, services)
-}
+pub use service::{initialize_all, Service};

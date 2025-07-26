@@ -12,17 +12,20 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+use std::fmt::Display;
 use std::fs::{self, Permissions};
 use std::io::{self, Write};
 use std::os::unix::fs::PermissionsExt;
+use std::time::UNIX_EPOCH;
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 
-use rustfm_scrobble_proxy::Scrobbler;
+use rustfm_scrobble_proxy::{Scrobble, Scrobbler};
 
 use rpassword::read_password;
 
-use crate::config::config_dir;
+use crate::config::{config_dir, Config};
+use crate::service::{lastfm, Service};
 
 const SESSION_FILE: &str = "session";
 
@@ -62,4 +65,66 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<()> {
     }
 
     Ok(())
+}
+
+pub struct LastFMService {
+    scrobbler: Scrobbler,
+}
+
+impl LastFMService {
+    /// Try to connect to Last.fm.
+    pub fn new(config: &Config) -> Result<Option<Self>> {
+        match (&config.lastfm_key, &config.lastfm_secret) {
+            (Some(key), Some(secret)) => {
+                let mut scrobbler = Scrobbler::new(key, secret);
+
+                lastfm::authenticate(&mut scrobbler)
+                    .context("Failed to authenticate with Last.fm")?;
+
+                Ok(Some(Self { scrobbler }))
+            }
+            (None, None) => Ok(None),
+            _ => Err(anyhow!("Last.fm API key or API secret are missing")),
+        }
+    }
+}
+
+impl Service for LastFMService {
+    fn now_playing(&self, track: &crate::track::Track) -> Result<()> {
+        let scrobble = Scrobble::new(track.artist(), track.title(), track.album());
+
+        self.scrobbler
+            .now_playing(&scrobble)
+            .with_context(|| format!("Failed to update status on {}", self))?;
+
+        Ok(())
+    }
+
+    fn submit(
+        &self,
+        track: &crate::track::Track,
+        track_start: Option<&std::time::SystemTime>,
+    ) -> Result<()> {
+        let mut scrobble = Scrobble::new(track.artist(), track.title(), track.album());
+
+        if let Some(track_start) = track_start {
+            let timestamp = track_start
+                .duration_since(UNIX_EPOCH)
+                .context("Track started before UNIX epoch")?;
+
+            scrobble.with_timestamp(timestamp.as_secs());
+        }
+
+        self.scrobbler
+            .scrobble(&scrobble)
+            .with_context(|| format!("Failed to submit track to {}", self))?;
+
+        Ok(())
+    }
+}
+
+impl Display for LastFMService {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "last.fm")
+    }
 }
