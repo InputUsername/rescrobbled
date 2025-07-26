@@ -25,7 +25,7 @@ use rustfm_scrobble_proxy::{Scrobble, Scrobbler};
 use rpassword::read_password;
 
 use crate::config::{config_dir, Config};
-use crate::service::{lastfm, Service};
+use crate::connection::{lastfm, ServiceConnection};
 
 const SESSION_FILE: &str = "session";
 
@@ -67,11 +67,11 @@ pub fn authenticate(scrobbler: &mut Scrobbler) -> Result<()> {
     Ok(())
 }
 
-pub struct LastFMService {
+pub struct LastFMConnection {
     scrobbler: Scrobbler,
 }
 
-impl LastFMService {
+impl LastFMConnection {
     /// Try to connect to Last.fm.
     pub fn new(config: &Config) -> Result<Option<Self>> {
         match (&config.lastfm_key, &config.lastfm_secret) {
@@ -89,7 +89,7 @@ impl LastFMService {
     }
 }
 
-impl Service for LastFMService {
+impl ServiceConnection for LastFMConnection {
     fn now_playing(&self, track: &crate::track::Track) -> Result<()> {
         let scrobble = Scrobble::new(track.artist(), track.title(), track.album());
 
@@ -123,7 +123,7 @@ impl Service for LastFMService {
     }
 }
 
-impl Display for LastFMService {
+impl Display for LastFMConnection {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "last.fm")
     }

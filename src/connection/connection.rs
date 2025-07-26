@@ -18,12 +18,12 @@ use std::time::SystemTime;
 
 use anyhow::Result;
 
-use crate::service::{LastFMService, ListenBrainzService};
+use crate::connection::{LastFMConnection, ListenBrainzConnection};
 
 use crate::config::Config;
 use crate::track::Track;
 
-pub trait Service: Display {
+pub trait ServiceConnection: Display {
     /// Submit a "now playing" request.
     fn now_playing(&self, track: &Track) -> Result<()>;
     /// Scrobble a track.
@@ -31,10 +31,10 @@ pub trait Service: Display {
 }
 
 /// Initialize all services specified in the config.
-pub fn initialize_all(config: &Config) -> Vec<Box<dyn Service>> {
-    let mut services: Vec<Box<dyn Service>> = Vec::new();
+pub fn initialize_all(config: &Config) -> Vec<Box<dyn ServiceConnection>> {
+    let mut services: Vec<Box<dyn ServiceConnection>> = Vec::new();
 
-    match LastFMService::new(config) {
+    match LastFMConnection::new(config) {
         Ok(Some(lastfm)) => {
             println!("Authenticated with {} successfully!", lastfm);
             services.push(Box::new(lastfm));
@@ -44,7 +44,7 @@ pub fn initialize_all(config: &Config) -> Vec<Box<dyn Service>> {
     }
 
     for lb in config.listenbrainz.iter().flatten() {
-        match ListenBrainzService::new(lb) {
+        match ListenBrainzConnection::new(lb) {
             Ok(service) => {
                 println!("Authenticated with {} successfully!", service);
                 services.push(Box::new(service));

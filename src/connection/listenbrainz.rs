@@ -18,14 +18,14 @@ use std::fmt::{self, Display, Formatter, Write};
 use std::time::SystemTime;
 
 use crate::track::Track;
-use crate::{config::ListenBrainzConfig, service::Service};
+use crate::{config::ListenBrainzConfig, connection::ServiceConnection};
 
-pub struct ListenBrainzService {
+pub struct ListenBrainzConnection {
     client: ListenBrainz,
     is_default: bool,
 }
 
-impl ListenBrainzService {
+impl ListenBrainzConnection {
     /// Try to connect to a ListenBrainz instance.
     pub fn new(lb: &ListenBrainzConfig) -> Result<Self> {
         let mut client = match lb.url {
@@ -47,7 +47,7 @@ impl ListenBrainzService {
         })
     }
 }
-impl Service for ListenBrainzService {
+impl ServiceConnection for ListenBrainzConnection {
     fn now_playing(&self, track: &Track) -> Result<()> {
         self.client
             .playing_now(track.artist(), track.title(), track.album())
@@ -63,7 +63,7 @@ impl Service for ListenBrainzService {
     }
 }
 
-impl Display for ListenBrainzService {
+impl Display for ListenBrainzConnection {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         write!(f, "ListenBrainz")?;
         if !self.is_default {

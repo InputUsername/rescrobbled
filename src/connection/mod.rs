@@ -14,10 +14,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 mod lastfm;
-pub use lastfm::LastFMService;
+pub use lastfm::LastFMConnection;
 
 mod listenbrainz;
-pub use listenbrainz::ListenBrainzService;
+pub use listenbrainz::ListenBrainzConnection;
 
-mod service;
-pub use service::{initialize_all, Service};
+mod connection;
+pub use connection::{initialize_all, ServiceConnection};

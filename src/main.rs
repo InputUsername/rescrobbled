@@ -21,11 +21,11 @@ mod config;
 mod filter;
 mod mainloop;
 mod player;
-mod service;
 mod track;
+mod connection;
 
 use config::load_config;
-use service::initialize_all;
+use connection::initialize_all;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
 
