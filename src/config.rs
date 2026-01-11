@@ -23,7 +23,7 @@ use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Duration;
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
@@ -115,7 +115,9 @@ impl Config {
                     token: self.listenbrainz_token.take().unwrap().into(),
                 }])
             } else {
-                eprintln!("Warning: both listenbrainz-token and [[listenbrainz]] config options are defined (listenbrainz-token will be ignored)");
+                eprintln!(
+                    "Warning: both listenbrainz-token and [[listenbrainz]] config options are defined (listenbrainz-token will be ignored)"
+                );
             }
 
             self.listenbrainz_token.take();
@@ -209,11 +211,13 @@ pub fn load_config() -> Result<Config> {
 
 #[cfg(test)]
 mod tests {
-    use std::{borrow::Cow, path::Path};
+    use std::{borrow::Cow, path::Path, sync::Mutex};
 
     use crate::config::secrets::Secret;
 
     use super::*;
+
+    static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn test_normalize_empty_config() {
@@ -256,12 +260,18 @@ mod tests {
     fn test_override_from_environment() {
         let mut config = Config::default();
 
-        std::env::set_var("LASTFM_KEY", "lastfm_key_123");
-        std::env::set_var("LASTFM_SECRET", "lastfm_secret_456");
-        std::env::set_var("LISTENBRAINZ_TOKEN", "listenbrainz_token_xyz");
-        std::env::set_var("MIN_PLAY_TIME", "30");
-        std::env::set_var("FILTER_SCRIPT", "/tmp/filter.sh");
-        std::env::set_var("USE_TRACK_START_TIMESTAMP", "true");
+        let _guard = ENV_LOCK.lock().unwrap();
+
+        // Safety: a mutex is used to ensure this test runs single-threaded.
+        // No other test uses environment variables.
+        unsafe {
+            std::env::set_var("LASTFM_KEY", "lastfm_key_123");
+            std::env::set_var("LASTFM_SECRET", "lastfm_secret_456");
+            std::env::set_var("LISTENBRAINZ_TOKEN", "listenbrainz_token_xyz");
+            std::env::set_var("MIN_PLAY_TIME", "30");
+            std::env::set_var("FILTER_SCRIPT", "/tmp/filter.sh");
+            std::env::set_var("USE_TRACK_START_TIMESTAMP", "true");
+        }
 
         override_from_environment(&mut config).unwrap();
 
