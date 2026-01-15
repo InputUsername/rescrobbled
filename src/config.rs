@@ -13,6 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+pub mod secrets;
+
 use std::collections::HashSet;
 use std::env::{self, VarError};
 use std::fs::{self, Permissions};
@@ -24,6 +26,8 @@ use std::time::Duration;
 use anyhow::{anyhow, bail, Context, Result};
 
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
+
+use crate::config::secrets::{LastFmKey, LastFmSecret, ListenBrainzGlobalToken, ListenBrainzToken};
 
 const CONFIG_DIR: &str = "rescrobbled";
 const CONFIG_FILE: &str = "config.toml";
@@ -48,20 +52,21 @@ fn serialize_duration_seconds<S: Serializer>(
 #[derive(Deserialize, Serialize, Default, Debug)]
 pub struct ListenBrainzConfig {
     pub url: Option<String>,
-    pub token: String,
+    #[serde(flatten)]
+    pub token: ListenBrainzToken,
 }
 
 #[derive(Deserialize, Serialize, Default, Debug)]
 #[serde(rename_all = "kebab-case")]
 pub struct Config {
-    #[serde(alias = "api-key")]
-    pub lastfm_key: Option<String>,
+    #[serde(flatten)]
+    pub lastfm_key: Option<LastFmKey>,
 
-    #[serde(alias = "api-secret")]
-    pub lastfm_secret: Option<String>,
+    #[serde(flatten)]
+    pub lastfm_secret: Option<LastFmSecret>,
 
-    #[serde(alias = "lb-token")]
-    pub listenbrainz_token: Option<String>,
+    #[serde(flatten)]
+    pub listenbrainz_token: Option<ListenBrainzGlobalToken>,
 
     #[serde(
         default,
@@ -82,8 +87,8 @@ pub struct Config {
 impl Config {
     pub fn template() -> String {
         let template = Config {
-            lastfm_key: Some(String::new()),
-            lastfm_secret: Some(String::new()),
+            lastfm_key: Some(LastFmKey::default()),
+            lastfm_secret: Some(LastFmSecret::default()),
             listenbrainz_token: None,
             min_play_time: Some(Duration::from_secs(0)),
             player_whitelist: Some(HashSet::new()),
@@ -91,7 +96,7 @@ impl Config {
             use_track_start_timestamp: Some(false),
             listenbrainz: Some(vec![ListenBrainzConfig {
                 url: Some(String::new()),
-                token: String::new(),
+                token: ListenBrainzToken::default(),
             }]),
         };
         toml::to_string(&template)
@@ -107,7 +112,7 @@ impl Config {
             if self.listenbrainz.is_none() {
                 self.listenbrainz = Some(vec![ListenBrainzConfig {
                     url: None,
-                    token: self.listenbrainz_token.take().unwrap(),
+                    token: self.listenbrainz_token.take().unwrap().into(),
                 }])
             } else {
                 eprintln!("Warning: both listenbrainz-token and [[listenbrainz]] config options are defined (listenbrainz-token will be ignored)");
@@ -150,11 +155,17 @@ fn replace_if_some<T>(option: &mut Option<T>, replacement: Option<T>) {
 }
 
 fn override_from_environment(config: &mut Config) -> Result<()> {
-    replace_if_some(&mut config.lastfm_key, get_envvar("LASTFM_KEY")?);
-    replace_if_some(&mut config.lastfm_secret, get_envvar("LASTFM_SECRET")?);
+    replace_if_some(
+        &mut config.lastfm_key,
+        get_envvar("LASTFM_KEY")?.map(LastFmKey::Inline),
+    );
+    replace_if_some(
+        &mut config.lastfm_secret,
+        get_envvar("LASTFM_SECRET")?.map(LastFmSecret::Inline),
+    );
     replace_if_some(
         &mut config.listenbrainz_token,
-        get_envvar("LISTENBRAINZ_TOKEN")?,
+        get_envvar("LISTENBRAINZ_TOKEN")?.map(ListenBrainzGlobalToken::Inline),
     );
     replace_if_some(
         &mut config.min_play_time,
@@ -198,7 +209,9 @@ pub fn load_config() -> Result<Config> {
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
+    use std::{borrow::Cow, path::Path};
+
+    use crate::config::secrets::Secret;
 
     use super::*;
 
@@ -214,24 +227,24 @@ mod tests {
     #[test]
     fn test_normalize_listenbrainz_token() {
         let mut config = Config::default();
-        config.listenbrainz_token = Some("TEST TOKEN".to_string());
+        config.listenbrainz_token = Some(ListenBrainzGlobalToken::Inline("TEST TOKEN".to_string()));
         config.normalize();
 
         assert!(config.listenbrainz_token.is_none());
         assert!(config.listenbrainz.is_some());
         assert!(matches!(
             &config.listenbrainz.unwrap()[..],
-            [ListenBrainzConfig { url: None, token }] if token == "TEST TOKEN"
+            [ListenBrainzConfig { url: None, token }] if token == &ListenBrainzToken::Inline("TEST TOKEN".to_string())
         ));
     }
 
     #[test]
     fn test_normalize_listenbrainz_double() {
         let mut config = Config::default();
-        config.listenbrainz_token = Some("TEST TOKEN".to_string());
+        config.listenbrainz_token = Some(ListenBrainzGlobalToken::Inline("TEST TOKEN".to_string()));
         config.listenbrainz = Some(vec![ListenBrainzConfig {
             url: None,
-            token: "SECOND TEST TOKEN".to_string(),
+            token: ListenBrainzToken::Inline("SECOND TEST TOKEN".to_string()),
         }]);
         config.normalize();
 
@@ -252,11 +265,19 @@ mod tests {
 
         override_from_environment(&mut config).unwrap();
 
-        assert_eq!(config.lastfm_key.as_deref(), Some("lastfm_key_123"));
-        assert_eq!(config.lastfm_secret.as_deref(), Some("lastfm_secret_456"));
         assert_eq!(
-            config.listenbrainz_token.as_deref(),
-            Some("listenbrainz_token_xyz")
+            config.lastfm_key,
+            Some(LastFmKey::Inline("lastfm_key_123".to_string()))
+        );
+        assert_eq!(
+            config.lastfm_secret,
+            Some(LastFmSecret::Inline("lastfm_secret_456".to_string()))
+        );
+        assert_eq!(
+            config.listenbrainz_token,
+            Some(ListenBrainzGlobalToken::Inline(
+                "listenbrainz_token_xyz".to_string()
+            ))
         );
         assert_eq!(config.min_play_time, Some(Duration::from_secs(30)));
         assert_eq!(
@@ -264,5 +285,13 @@ mod tests {
             Some(Path::new("/tmp/filter.sh"))
         );
         assert_eq!(config.use_track_start_timestamp, Some(true));
+    }
+
+    #[test]
+    fn test_secrets_from_file() {
+        assert_eq!(
+            LastFmKey::File("tests/secret".to_string()).get().unwrap(),
+            Cow::<str>::Owned("something secret".to_string())
+        )
     }
 }
