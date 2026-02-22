@@ -24,6 +24,7 @@ use rustfm_scrobble_proxy::{Scrobble, Scrobbler};
 
 mod lastfm;
 
+use crate::config::secrets::Secret;
 use crate::config::{Config, ListenBrainzConfig};
 use crate::track::Track;
 
@@ -41,7 +42,7 @@ impl Service {
     fn lastfm(config: &Config) -> Result<Option<Self>> {
         match (&config.lastfm_key, &config.lastfm_secret) {
             (Some(key), Some(secret)) => {
-                let mut scrobbler = Scrobbler::new(key, secret);
+                let mut scrobbler = Scrobbler::new(&key.get()?, &secret.get()?);
 
                 lastfm::authenticate(&mut scrobbler)
                     .context("Failed to authenticate with Last.fm")?;
@@ -60,7 +61,7 @@ impl Service {
             None => ListenBrainz::new(),
         };
 
-        client.authenticate(&lb.token).with_context(|| {
+        client.authenticate(&lb.token.get()?).with_context(|| {
             let mut err = "Failed to authenticate with ListenBrainz".to_owned();
             if let Some(ref url) = lb.url {
                 write!(err, " ({url})").unwrap();
