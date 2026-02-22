@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Moved to Rust 2024 edition
+
 ## v0.8.0 (2025-06-12)
 
 - Added the `use_track_start_timestamp` option, allowing tracks to be recorded with a timestamp

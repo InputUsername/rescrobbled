@@ -2,7 +2,7 @@
 name = "rescrobbled"
 version = "0.8.0"
 authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
-edition = "2021"
+edition = "2024"
 license = "GPL-3.0"
 repository = "https://github.com/InputUsername/rescrobbled.git"
 homepage = "https://github.com/InputUsername/rescrobbled"
@@ -14,7 +14,7 @@ publish = false
 
 [dependencies]
 mpris = "2.0.1"
-rustfm-scrobble-proxy = "2.0.0"
+rustfm-scrobble-proxy = "2.0.1"
 listenbrainz = "0.8.1"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "1.0.2"
