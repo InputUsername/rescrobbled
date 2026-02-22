@@ -2,7 +2,11 @@
 
 ## Unreleased
 
+- Added the ability to load secrets from a file
+  - Added `lastfm-key-file`, `lastfm-secret-file`, `listenbrainz-token-file` and `[[listenbrainz]] token-file` options
+    to point to a file containing the secret.
 - Moved to Rust 2024 edition
+- Updated dependencies
 
 ## v0.8.0 (2025-06-12)
 

@@ -91,6 +91,8 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
 > [!NOTE]
 > Due to the way TOML works, the `[[listenbrainz]]` definitions need to be the last thing in your config file.
 
+### Environment variables
+
 Options can also be overridden using environment variables. The following variables are supported:
 | Option | Environment variable |
 |---|---|
@@ -99,6 +101,15 @@ Options can also be overridden using environment variables. The following variab
 | `min-play-time` | `MIN_PLAY_TIME` |
 | `filter-script` | `FILTER_SCRIPT` |
 | `use-track-start-timestamp` | `USE_TRACK_START_TIMESTAMP` |
+
+### Loading secrets from files
+
+Secrets can alternatively be loaded from files. This is useful for secret managers like [agenix](https://github.com/ryantm/agenix).
+Use the following options for this:
+- `lastfm-key-file`
+- `lastfm-secret-file`
+- `listenbrainz-token-file`
+- `[[listenbrainz]] token-file`
 
 ## Usage
 
