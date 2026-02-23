@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::collections::HashSet;
 use std::thread;
 use std::time::Duration;
 
 use mpris::{PlaybackStatus, Player, PlayerFinder};
+use regex::RegexSet;
 
 use crate::config::Config;
 
@@ -40,7 +40,7 @@ pub fn is_active(player: &Player) -> bool {
 /// This takes into account the possibility of multiple player instances:
 /// it checks both the name, and the name with the instance part
 /// (something like `.instance123`) stripped off.
-fn is_bus_name_whitelisted(player: &Player, whitelist: &HashSet<String>) -> bool {
+fn is_bus_name_whitelisted(player: &Player, whitelist: &RegexSet) -> bool {
     let bus_name = player.bus_name().trim_start_matches(BUS_NAME_PREFIX);
 
     let without_instance = bus_name
@@ -48,7 +48,7 @@ fn is_bus_name_whitelisted(player: &Player, whitelist: &HashSet<String>) -> bool
         .map(|(name, _instance)| name)
         .unwrap_or(bus_name);
 
-    whitelist.contains(bus_name) || whitelist.contains(without_instance)
+    whitelist.is_match(bus_name) || whitelist.is_match(without_instance)
 }
 
 /// Determine if a player's MPRIS identity or the unique part
@@ -56,7 +56,7 @@ fn is_bus_name_whitelisted(player: &Player, whitelist: &HashSet<String>) -> bool
 fn is_whitelisted(config: &Config, player: &Player) -> bool {
     if let Some(ref whitelist) = config.player_whitelist {
         if !whitelist.is_empty() {
-            return whitelist.contains(player.identity())
+            return whitelist.is_match(player.identity())
                 || is_bus_name_whitelisted(player, whitelist);
         }
     }

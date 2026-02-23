@@ -1,4 +1,4 @@
-// Copyright (C) 2025 Koen Bolhuis
+// Copyright (C) 2026 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
 
 pub mod secrets;
 
-use std::collections::HashSet;
 use std::env::{self, VarError};
 use std::fs::{self, Permissions};
 use std::os::unix::fs::PermissionsExt;
@@ -25,6 +24,9 @@ use std::time::Duration;
 
 use anyhow::{Context, Result, anyhow, bail};
 
+use regex::RegexSet;
+
+use serde::ser::SerializeSeq;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::config::secrets::{LastFmKey, LastFmSecret, ListenBrainzGlobalToken, ListenBrainzToken};
@@ -49,6 +51,25 @@ fn serialize_duration_seconds<S: Serializer>(
     }
 }
 
+fn deserialize_regex_set<'de, D: Deserializer<'de>>(de: D) -> Result<Option<RegexSet>, D::Error> {
+    let set: Vec<String> = Vec::deserialize(de)?;
+    RegexSet::new(set)
+        .map(Some)
+        .map_err(serde::de::Error::custom)
+}
+
+fn serialize_regex_set<S: Serializer>(value: &Option<RegexSet>, se: S) -> Result<S::Ok, S::Error> {
+    if let Some(s) = value {
+        let mut seq = se.serialize_seq(Some(s.len()))?;
+        for re in s.patterns() {
+            seq.serialize_element(re)?;
+        }
+        seq.end()
+    } else {
+        se.serialize_none()
+    }
+}
+
 #[derive(Deserialize, Serialize, Default, Debug)]
 pub struct ListenBrainzConfig {
     pub url: Option<String>,
@@ -61,26 +82,24 @@ pub struct ListenBrainzConfig {
 pub struct Config {
     #[serde(flatten)]
     pub lastfm_key: Option<LastFmKey>,
-
     #[serde(flatten)]
     pub lastfm_secret: Option<LastFmSecret>,
-
     #[serde(flatten)]
     pub listenbrainz_token: Option<ListenBrainzGlobalToken>,
-
     #[serde(
         default,
         deserialize_with = "deserialize_duration_seconds",
         serialize_with = "serialize_duration_seconds"
     )]
     pub min_play_time: Option<Duration>,
-
-    pub player_whitelist: Option<HashSet<String>>,
-
+    #[serde(
+        default,
+        deserialize_with = "deserialize_regex_set",
+        serialize_with = "serialize_regex_set"
+    )]
+    pub player_whitelist: Option<RegexSet>,
     pub filter_script: Option<PathBuf>,
-
     pub use_track_start_timestamp: Option<bool>,
-
     pub listenbrainz: Option<Vec<ListenBrainzConfig>>,
 }
 
@@ -91,7 +110,7 @@ impl Config {
             lastfm_secret: Some(LastFmSecret::default()),
             listenbrainz_token: None,
             min_play_time: Some(Duration::from_secs(0)),
-            player_whitelist: Some(HashSet::new()),
+            player_whitelist: Some(RegexSet::default()),
             filter_script: Some(PathBuf::new()),
             use_track_start_timestamp: Some(false),
             listenbrainz: Some(vec![ListenBrainzConfig {

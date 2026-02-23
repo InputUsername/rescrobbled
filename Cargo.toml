@@ -24,6 +24,7 @@ toml = "1.0.2"
 dirs = "6.0.0"
 anyhow = "1.0.102"
 rpassword = "7.4.0"
+regex = "1.12.3"
 
 [dev-dependencies]
 tempfile = "3.26.0"
