@@ -12,6 +12,9 @@ keywords = ["mpris", "music", "scrobble", "daemon"]
 categories = ["multimedia", "command-line-utilities"]
 publish = false
 
+[profile.release]
+strip = true
+
 [dependencies]
 mpris = "2.0.1"
 rustfm-scrobble-proxy = "2.0.1"
