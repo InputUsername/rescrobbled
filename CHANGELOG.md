@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.9.0 (2026-03-08)
 
 - Added the ability to load secrets from a file
   - Added `lastfm-key-file`, `lastfm-secret-file`, `listenbrainz-token-file` and `[[listenbrainz]] token-file` options
