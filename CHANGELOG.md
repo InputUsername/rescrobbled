@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.9.0 (2026-03-08)
+
+- Added the ability to load secrets from a file
+  - Added `lastfm-key-file`, `lastfm-secret-file`, `listenbrainz-token-file` and `[[listenbrainz]] token-file` options
+    to point to a file containing the secret.
+- Moved to Rust 2024 edition
+- Updated dependencies
+
 ## v0.8.0 (2025-06-12)
 
 - Added the `use_track_start_timestamp` option, allowing tracks to be recorded with a timestamp
@@ -107,7 +115,7 @@
 - Cleaned up the README
 - Documented where the session token is stored
 
-## 0.4.0 (2021-05-07)
+## v0.4.0 (2021-05-07)
 
 - Added ignore functionality for filter scripts:
   - Filter scripts that return nothing will cause the current track to be ignored/not scrobbled
