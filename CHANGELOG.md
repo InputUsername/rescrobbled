@@ -115,7 +115,7 @@
 - Cleaned up the README
 - Documented where the session token is stored
 
-## 0.4.0 (2021-05-07)
+## v0.4.0 (2021-05-07)
 
 - Added ignore functionality for filter scripts:
   - Filter scripts that return nothing will cause the current track to be ignored/not scrobbled
