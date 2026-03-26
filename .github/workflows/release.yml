@@ -40,7 +40,7 @@ jobs:
           persist-credentials: false
       - name: Install dependencies
         run: sudo apt-get install --no-install-recommends -y libdbus-1-dev dbus
-      - uses: rust-lang/crates-io-auth-action@b7e9a28eded4986ec6b1fa40eeee8f8f165559ec # v1.0.3
+      - uses: rust-lang/crates-io-auth-action@bbd81622f20ce9e2dd9622e3218b975523e45bbe # v1.0.4
         id: auth
       - name: Release on crates.io
         run: |
