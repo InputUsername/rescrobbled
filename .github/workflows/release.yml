@@ -22,7 +22,7 @@ jobs:
         run: |
           awk "/^## $GITHUB_REF_NAME/{found=1; next} found && /^## /{exit} found{print}" CHANGELOG.md >changes.txt
       - name: Create release
-        uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
+        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # v2.6.1
         with:
           body_path: changes.txt
           files: target/release/rescrobbled
