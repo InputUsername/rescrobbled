@@ -16,7 +16,7 @@ publish = false
 strip = true
 
 [dependencies]
-mpris = "2.0.1"
+mpris = "2.1.0"
 rustfm-scrobble-proxy = "2.0.1"
 listenbrainz = "0.8.1"
 serde = { version = "1.0.228", features = ["derive"] }
