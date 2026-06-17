@@ -16,12 +16,12 @@
 use std::thread;
 use std::time::{Duration, Instant, SystemTime};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 
 use mpris::{PlaybackStatus, PlayerFinder};
 
 use crate::config::Config;
-use crate::filter::{filter_metadata, FilterResult};
+use crate::filter::{FilterResult, filter_metadata};
 use crate::player;
 use crate::service::Service;
 use crate::track::Track;

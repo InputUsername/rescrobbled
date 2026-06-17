@@ -17,7 +17,7 @@ use std::fmt::Write as _;
 use std::io::Write as _;
 use std::process::{Command, Stdio};
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 
 use mpris::Metadata;
 
