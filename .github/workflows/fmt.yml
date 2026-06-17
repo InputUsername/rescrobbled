@@ -6,8 +6,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build-and-test:
-    name: Build and test
+  check-formatting:
+    name: Check formatting
     runs-on: ubuntu-latest
 
     steps:
@@ -15,9 +15,5 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
-      - name: Install dependencies
-        run: sudo apt-get install --no-install-recommends -y libdbus-1-dev dbus
-      - name: Build
-        run: cargo build --verbose
-      - name: Run tests
-        run: cargo test --verbose
+      - name: Run cargo fmt
+        run: cargo fmt --check --verbose
