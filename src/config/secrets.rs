@@ -1,6 +1,6 @@
-use std::{borrow::Cow, fs, path::PathBuf};
+use std::{borrow::Cow, fs, path::PathBuf, str::FromStr};
 
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug, PartialEq)]
@@ -88,13 +88,7 @@ macro_rules! impl_secret {
                 match self {
                     $name::Inline(secret) => Ok(Cow::Borrowed(secret)),
                     $name::File(path) => {
-                        let path = if let Some(stripped) = path.strip_prefix("~/") {
-                            dirs::home_dir()
-                                .ok_or_else(|| anyhow!("User home directory does not exist"))?
-                                .join(stripped)
-                        } else {
-                            PathBuf::from(path)
-                        };
+                        let path = PathBuf::from_str(&(shellexpand::full(&path)?))?;
                         let secret = fs::read_to_string(path)?;
 
                         Ok(Cow::Owned(secret.trim().to_owned()))
