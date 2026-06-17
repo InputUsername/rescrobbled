@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9.1 (2026-06-17)
+
+- Added shell expansion (e.g. environment variables, `~`) to secret file resolution
+- Updated dependencies
+
 ## v0.9.0 (2026-03-08)
 
 - Added the ability to load secrets from a file
