@@ -98,6 +98,12 @@ pub struct Config {
         serialize_with = "serialize_regex_set"
     )]
     pub player_whitelist: Option<RegexSet>,
+    #[serde(
+        default,
+        deserialize_with = "deserialize_regex_set",
+        serialize_with = "serialize_regex_set"
+    )]
+    pub player_ignorelist: Option<RegexSet>,
     pub filter_script: Option<PathBuf>,
     pub use_track_start_timestamp: Option<bool>,
     pub listenbrainz: Option<Vec<ListenBrainzConfig>>,
@@ -111,6 +117,7 @@ impl Config {
             listenbrainz_token: None,
             min_play_time: Some(Duration::from_secs(0)),
             player_whitelist: Some(RegexSet::default()),
+            player_ignorelist: Some(RegexSet::default()),
             filter_script: Some(PathBuf::new()),
             use_track_start_timestamp: Some(false),
             listenbrainz: Some(vec![ListenBrainzConfig {
