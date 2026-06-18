@@ -1,6 +1,6 @@
 [package]
 name = "rescrobbled"
-version = "0.9.1"
+version = "0.10.0"
 authors = ["Koen Bolhuis <koen.bolhuis@gmail.com>"]
 edition = "2024"
 license = "GPL-3.0"
@@ -25,6 +25,7 @@ dirs = "6.0.0"
 anyhow = "1.0.102"
 rpassword = "7.5.4"
 shellexpand = "3.1.2"
+regex = "1.12.3"
 
 [dev-dependencies]
 tempfile = "3.27.0"

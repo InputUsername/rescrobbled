@@ -28,7 +28,8 @@ Rescrobbled expects a configuration file at `~/.config/rescrobbled/config.toml` 
 lastfm-key = "Last.fm API key"
 lastfm-secret = "Last.fm API secret"
 min-play-time = 0
-player-whitelist = [ "Player MPRIS identity or bus name" ]
+player-whitelist = [ "Player MPRIS identity or bus name", "regex.*" ]
+player-ignorelist = [ "name", "regex.*" ]
 filter-script = "path/to/script"
 use-track-start-timestamp = false
 
@@ -63,9 +64,12 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
         </td>
     </tr>
     <tr>
-        <td><code>player-whitelist</code></td>
+        <td><code>player-whitelist</code>, <code>player-ignorelist</code></td>
         <td>
-            <p>If empty or ommitted, music from all players will be scrobbled; otherwise, rescrobbled will only listen to players in this list.</p>
+            <p>If empty or omitted, music from all players will be scrobbled.
+            If a whitelist is defined, only players in this list will be scrobbled. If an ignorelist is defined, players in this list will be ignored.
+            These can be combined; the ignorelist will take precedence.</p>
+            <p>Supports regex patterns. <a href="https://docs.rs/regex/latest/regex/#syntax">See here for the syntax.</a></p>
             <p>A CLI application like <a href="https://github.com/altdesktop/playerctl">playerctl</a> can be used to determine a player's name for the whitelist. To do so, start playing a song and run the following command:</p>
             <pre><code>playerctl --list-all</code></pre>
         </td>

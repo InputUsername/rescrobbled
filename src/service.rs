@@ -16,7 +16,7 @@
 use std::fmt::{self, Write};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 
 use listenbrainz::ListenBrainz;
 

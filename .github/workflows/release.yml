@@ -44,7 +44,6 @@ jobs:
         id: auth
       - name: Release on crates.io
         run: |
-          cargo publish --dry-run
           sed -i 's/publish = false/publish = true/' Cargo.toml
           cargo publish --allow-dirty
         env:

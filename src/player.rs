@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Koen Bolhuis
+// Copyright (C) 2026 Koen Bolhuis
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use std::collections::HashSet;
 use std::thread;
 use std::time::Duration;
 
 use mpris::{PlaybackStatus, Player, PlayerFinder};
+use regex::RegexSet;
 
 use crate::config::Config;
 
@@ -34,13 +34,13 @@ pub fn is_active(player: &Player) -> bool {
     matches!(player.get_playback_status(), Ok(PlaybackStatus::Playing))
 }
 
-/// Determine if the unique part of the D-Bus bus name, ie. the part
-/// after `org.mpris.MediaPlayer2.`, is whitelisted.
+/// Determine if the MPRIS identity or the unique part of the D-Bus bus name
+/// (i.e. the part after `org.mpris.MediaPlayer2.`) is contained in the regex set.
 ///
 /// This takes into account the possibility of multiple player instances:
 /// it checks both the name, and the name with the instance part
 /// (something like `.instance123`) stripped off.
-fn is_bus_name_whitelisted(player: &Player, whitelist: &HashSet<String>) -> bool {
+fn regex_set_contains(set: &RegexSet, player: &Player) -> bool {
     let bus_name = player.bus_name().trim_start_matches(BUS_NAME_PREFIX);
 
     let without_instance = bus_name
@@ -48,22 +48,30 @@ fn is_bus_name_whitelisted(player: &Player, whitelist: &HashSet<String>) -> bool
         .map(|(name, _instance)| name)
         .unwrap_or(bus_name);
 
-    whitelist.contains(bus_name) || whitelist.contains(without_instance)
+    set.is_match(player.identity()) || set.is_match(bus_name) || set.is_match(without_instance)
 }
 
-/// Determine if a player's MPRIS identity or the unique part
-/// of its D-Bus bus name are whitelisted.
+/// Determine if a player's MPRIS identity or its D-Bus bus name are whitelisted.
 fn is_whitelisted(config: &Config, player: &Player) -> bool {
-    if let Some(ref whitelist) = config.player_whitelist {
-        if !whitelist.is_empty() {
-            return whitelist.contains(player.identity())
-                || is_bus_name_whitelisted(player, whitelist);
-        }
+    if let Some(ref whitelist) = config.player_whitelist
+        && !whitelist.is_empty()
+    {
+        return regex_set_contains(whitelist, player);
     }
     true
 }
 
-/// Wait for any (whitelisted) player to become active again.
+// Determine if a player's MPRIS identity or its D-Bus bus name are ignorelisted.
+fn is_ignorelisted(config: &Config, player: &Player) -> bool {
+    if let Some(ref ignorelist) = config.player_ignorelist
+        && !ignorelist.is_empty()
+    {
+        return regex_set_contains(ignorelist, player);
+    }
+    false
+}
+
+/// Wait for any (whitelisted, not ignorelisted) player to become active again.
 pub fn wait_for_player(config: &Config, finder: &PlayerFinder) -> Player {
     loop {
         let players = match finder.iter_players() {
@@ -74,12 +82,13 @@ pub fn wait_for_player(config: &Config, finder: &PlayerFinder) -> Player {
             }
         };
 
-        #[allow(clippy::manual_flatten)]
         for player in players {
-            if let Ok(player) = player {
-                if is_active(&player) && is_whitelisted(config, &player) {
-                    return player;
-                }
+            if let Ok(player) = player
+                && is_active(&player)
+                && is_whitelisted(config, &player)
+                && !is_ignorelisted(config, &player)
+            {
+                return player;
             }
         }
 
