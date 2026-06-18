@@ -1,8 +1,15 @@
 # Changelog
 
-## v0.9.1 (2026-06-17)
+## v0.10.0 (2026-06-18)
 
 - Added shell expansion (e.g. environment variables, `~`) to secret file resolution
+- Added regex support to the player whitelist
+  - [See here for the syntax](https://docs.rs/regex/latest/regex/#syntax)
+- Added a player ignorelist
+- Updated dependencies
+
+## v0.9.1 (2026-06-17)
+
 - Updated dependencies
 
 ## v0.9.0 (2026-03-08)
