@@ -102,6 +102,43 @@ pub fn filter_metadata(config: &Config, track: Track, metadata: &Metadata) -> Re
     }
 }
 
+/// Distinctive phrases used by browsers (e.g. Firefox) as the title of the
+/// placeholder metadata they expose while playing media in a private/incognito
+/// window, in various locales. The real track info is hidden in that case.
+const PRIVATE_BROWSING_PLACEHOLDER_PHRASES: &[&str] = &[
+    "is playing media",           // en
+    "sedang memutar media",       // id
+    "spielt medien ab",           // de
+    "lit un contenu multimédia",  // fr
+    "está reproduzindo mídia",    // pt-BR
+    "воспроизводит медиа",        // ru
+    "がメディアを再生しています", // ja
+    "正在播放媒体",               // zh-CN
+    "speelt media af",            // nl
+    "odtwarza multimedia",        // pl
+];
+
+/// Determine whether the given metadata is a browser's private-browsing
+/// placeholder, i.e. no real track information is exposed because the media is
+/// playing in a private/incognito window.
+///
+/// Browsers hide the real track info in that case: there is no URL, no artist,
+/// no album and the title is just a generic "{browser} is playing media"
+/// string. Such tracks should never be scrobbled, since doing so would leak
+/// that private listening happened.
+pub fn is_private_browsing_placeholder(metadata: &Metadata, track: &Track) -> bool {
+    let has_url = metadata.url().map(|url| !url.is_empty()).unwrap_or(false);
+
+    let title = track.title().to_lowercase();
+
+    track.artist().is_empty()
+        && track.album().is_none()
+        && !has_url
+        && PRIVATE_BROWSING_PLACEHOLDER_PHRASES
+            .iter()
+            .any(|phrase| title.contains(phrase))
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs;
@@ -209,5 +246,85 @@ echo \"$album\"
             .unwrap(),
             FilterResult::Filtered(Track::new("lorem", "ipsum", None)),
         )
+    }
+
+    fn metadata_with(
+        title: &str,
+        artist: Option<&str>,
+        album: Option<&str>,
+        url: Option<&str>,
+    ) -> Metadata {
+        let mut map = std::collections::HashMap::new();
+        map.insert(
+            "xesam:title".to_owned(),
+            mpris::MetadataValue::String(title.to_owned()),
+        );
+        if let Some(artist) = artist {
+            map.insert(
+                "xesam:artist".to_owned(),
+                mpris::MetadataValue::Array(vec![mpris::MetadataValue::String(artist.to_owned())]),
+            );
+        }
+        if let Some(album) = album {
+            map.insert(
+                "xesam:album".to_owned(),
+                mpris::MetadataValue::String(album.to_owned()),
+            );
+        }
+        if let Some(url) = url {
+            map.insert(
+                "xesam:url".to_owned(),
+                mpris::MetadataValue::String(url.to_owned()),
+            );
+        }
+        Metadata::from(map)
+    }
+
+    #[test]
+    fn test_private_browsing_placeholder() {
+        // Firefox hides real metadata in a private window: generic title,
+        // empty artist, no album and no URL.
+
+        let metadata = metadata_with("Firefox is playing media", Some(""), None, None);
+        let track = Track::from_metadata(&metadata);
+        assert!(is_private_browsing_placeholder(&metadata, &track));
+
+        // Localized placeholder should also be detected
+
+        let metadata_id = metadata_with(
+            "Firefox Developer Edition sedang memutar media",
+            None,
+            None,
+            None,
+        );
+        let track_id = Track::from_metadata(&metadata_id);
+        assert!(is_private_browsing_placeholder(&metadata_id, &track_id));
+
+        // A real track playing in a normal window has a URL, so it is not a
+        // private-browsing placeholder even if the title coincidentally
+        // contains the phrase.
+
+        let metadata_real = metadata_with(
+            "Some band is playing media",
+            Some("The Band"),
+            Some("Album"),
+            Some("https://example.com/watch?v=123"),
+        );
+        let track_real = Track::from_metadata(&metadata_real);
+        assert!(!is_private_browsing_placeholder(
+            &metadata_real,
+            &track_real
+        ));
+
+        // A real track without a URL (e.g. an internet radio stream) but with
+        // a real title that does not match any placeholder phrase is not
+        // ignored.
+
+        let metadata_radio = metadata_with("Some song title", Some(""), None, None);
+        let track_radio = Track::from_metadata(&metadata_radio);
+        assert!(!is_private_browsing_placeholder(
+            &metadata_radio,
+            &track_radio
+        ));
     }
 }
