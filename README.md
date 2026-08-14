@@ -32,6 +32,8 @@ player-whitelist = [ "Player MPRIS identity or bus name", "regex.*" ]
 player-ignorelist = [ "name", "regex.*" ]
 filter-script = "path/to/script"
 use-track-start-timestamp = false
+ignore-private-browsing = true
+require-title-and-artist = true
 
 [[listenbrainz]]
 url = "Custom API URL"
@@ -97,6 +99,20 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
         <td>By default, tracks are submitted with a timestamp of the submission time. By setting <code>use-track-start-timestamp</code> to <code>true</code>, tracks are instead submitted with the time the track originally started playing. This is currently Last.fm-only.</td>
     </tr>
     <tr>
+        <td><code>ignore-private-browsing</code></td>
+        <td>
+            <p>By default, rescrobbled ignores media that is playing in a browser's private/incognito window. Browsers such as Firefox hide the real track info there and only expose a generic "{browser} is playing media" placeholder (no artist, no album, no URL). Such tracks carry no scrobbling info, and scrobbling them would leak that private listening happened, so they are skipped entirely.</p>
+            <p>Set this to <code>false</code> to scrobble these placeholder tracks anyway.</p>
+        </td>
+    </tr>
+    <tr>
+        <td><code>require-title-and-artist</code></td>
+        <td>
+            <p>By default, rescrobbled only scrobbles tracks that have both a title and an artist. Media that only has one or neither (e.g. a local video file) is probably not music and is ignored.</p>
+            <p>Set this to <code>false</code> to also scrobble tracks with missing title or artist.</p>
+        </td>
+    </tr>
+    <tr>
         <td><code>[[listenbrainz]]</code></td>
         <td>
             <p>You can specify one or more ListenBrainz instances by repeating this option. Each definition needs at least a <code>token</code>. You can set <code>url</code> to use a custom API URL (eg. for use with custom ListenBrainz instances or services like <a href="https://github.com/krateng/maloja">Maloja</a>). If the URL is not provided, it defaults to the ListenBrainz.org instance.</p>
@@ -120,6 +136,8 @@ Some options can be set using environment variables. The following options are s
 | `min-play-time` | `MIN_PLAY_TIME` |
 | `filter-script` | `FILTER_SCRIPT` |
 | `use-track-start-timestamp` | `USE_TRACK_START_TIMESTAMP` |
+| `ignore-private-browsing` | `IGNORE_PRIVATE_BROWSING` |
+| `require-title-and-artist` | `REQUIRE_TITLE_AND_ARTIST` |
 
 ### Loading secrets from files
 

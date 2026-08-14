@@ -106,6 +106,8 @@ pub struct Config {
     pub player_ignorelist: Option<RegexSet>,
     pub filter_script: Option<PathBuf>,
     pub use_track_start_timestamp: Option<bool>,
+    pub ignore_private_browsing: Option<bool>,
+    pub require_title_and_artist: Option<bool>,
     pub listenbrainz: Option<Vec<ListenBrainzConfig>>,
 }
 
@@ -120,6 +122,8 @@ impl Config {
             player_ignorelist: Some(RegexSet::default()),
             filter_script: Some(PathBuf::new()),
             use_track_start_timestamp: Some(false),
+            ignore_private_browsing: Some(true),
+            require_title_and_artist: Some(true),
             listenbrainz: Some(vec![ListenBrainzConfig {
                 url: Some(String::new()),
                 token: ListenBrainzToken::default(),
@@ -203,6 +207,14 @@ fn override_from_environment(config: &mut Config) -> Result<()> {
     replace_if_some(
         &mut config.use_track_start_timestamp,
         get_envvar("USE_TRACK_START_TIMESTAMP")?,
+    );
+    replace_if_some(
+        &mut config.ignore_private_browsing,
+        get_envvar("IGNORE_PRIVATE_BROWSING")?,
+    );
+    replace_if_some(
+        &mut config.require_title_and_artist,
+        get_envvar("REQUIRE_TITLE_AND_ARTIST")?,
     );
 
     Ok(())
@@ -297,6 +309,8 @@ mod tests {
             std::env::set_var("MIN_PLAY_TIME", "30");
             std::env::set_var("FILTER_SCRIPT", "/tmp/filter.sh");
             std::env::set_var("USE_TRACK_START_TIMESTAMP", "true");
+            std::env::set_var("IGNORE_PRIVATE_BROWSING", "true");
+            std::env::set_var("REQUIRE_TITLE_AND_ARTIST", "true");
         }
 
         override_from_environment(&mut config).unwrap();
@@ -321,6 +335,8 @@ mod tests {
             Some(Path::new("/tmp/filter.sh"))
         );
         assert_eq!(config.use_track_start_timestamp, Some(true));
+        assert_eq!(config.ignore_private_browsing, Some(true));
+        assert_eq!(config.require_title_and_artist, Some(true));
     }
 
     #[test]

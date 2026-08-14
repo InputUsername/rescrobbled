@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Added the `ignore-private-browsing` option (enabled by default), which prevents tracks
+  playing in a browser's private/incognito window from being scrobbled
+  - Browsers such as Firefox hide the real track info in private windows and only expose
+    a generic placeholder ("{browser} is playing media") with no artist, album or URL;
+    such tracks are now ignored
+- Added the `require-title-and-artist` option (enabled by default), which only scrobbles
+  tracks that have both a title and an artist
+  - Media that only has one or neither (e.g. a local video file) is probably not music
+    and is now ignored
+
 ## v0.10.0 (2026-06-18)
 
 - Added shell expansion (e.g. environment variables, `~`) to secret file resolution
