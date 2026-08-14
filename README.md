@@ -33,6 +33,7 @@ player-ignorelist = [ "name", "regex.*" ]
 filter-script = "path/to/script"
 use-track-start-timestamp = false
 ignore-private-browsing = true
+require-title-and-artist = true
 
 [[listenbrainz]]
 url = "Custom API URL"
@@ -105,6 +106,13 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
         </td>
     </tr>
     <tr>
+        <td><code>require-title-and-artist</code></td>
+        <td>
+            <p>By default, rescrobbled only scrobbles tracks that have both a title and an artist. Media that only has one or neither (e.g. a local video file) is probably not music and is ignored.</p>
+            <p>Set this to <code>false</code> to also scrobble tracks with missing title or artist.</p>
+        </td>
+    </tr>
+    <tr>
         <td><code>[[listenbrainz]]</code></td>
         <td>
             <p>You can specify one or more ListenBrainz instances by repeating this option. Each definition needs at least a <code>token</code>. You can set <code>url</code> to use a custom API URL (eg. for use with custom ListenBrainz instances or services like <a href="https://github.com/krateng/maloja">Maloja</a>). If the URL is not provided, it defaults to the ListenBrainz.org instance.</p>
@@ -129,6 +137,7 @@ Some options can be set using environment variables. The following options are s
 | `filter-script` | `FILTER_SCRIPT` |
 | `use-track-start-timestamp` | `USE_TRACK_START_TIMESTAMP` |
 | `ignore-private-browsing` | `IGNORE_PRIVATE_BROWSING` |
+| `require-title-and-artist` | `REQUIRE_TITLE_AND_ARTIST` |
 
 ### Loading secrets from files
 

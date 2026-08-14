@@ -139,6 +139,13 @@ pub fn is_private_browsing_placeholder(metadata: &Metadata, track: &Track) -> bo
             .any(|phrase| title.contains(phrase))
 }
 
+/// Whether the track has enough metadata to be scrobbled. A music track needs
+/// both a title and an artist; media that only has one or neither (e.g. a
+/// local video file) is probably not music and should not be scrobbled.
+pub fn has_title_and_artist(track: &Track) -> bool {
+    !track.title().is_empty() && !track.artist().is_empty()
+}
+
 #[cfg(test)]
 mod tests {
     use std::fs;
@@ -326,5 +333,32 @@ echo \"$album\"
             &metadata_radio,
             &track_radio
         ));
+    }
+
+    #[test]
+    fn test_has_title_and_artist() {
+        // Both title and artist are required for a track to be scrobbled
+
+        let mut metadata = metadata_with("Some song", Some("Some artist"), Some("Album"), None);
+        let track = Track::from_metadata(&metadata);
+        assert!(has_title_and_artist(&track));
+
+        metadata = metadata_with("", Some("Some artist"), None, None);
+        let track = Track::from_metadata(&metadata);
+        assert!(!has_title_and_artist(&track));
+
+        metadata = metadata_with("Some song", None, None, None);
+        let track = Track::from_metadata(&metadata);
+        assert!(!has_title_and_artist(&track));
+
+        metadata = metadata_with("", None, None, None);
+        let track = Track::from_metadata(&metadata);
+        assert!(!has_title_and_artist(&track));
+
+        // An empty artist array (e.g. private browsing) also counts as missing
+
+        metadata = metadata_with("Some song", Some(""), None, None);
+        let track = Track::from_metadata(&metadata);
+        assert!(!has_title_and_artist(&track));
     }
 }

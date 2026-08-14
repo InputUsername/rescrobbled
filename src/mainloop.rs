@@ -21,7 +21,9 @@ use anyhow::{Context, Result, anyhow};
 use mpris::{PlaybackStatus, PlayerFinder};
 
 use crate::config::Config;
-use crate::filter::{FilterResult, filter_metadata, is_private_browsing_placeholder};
+use crate::filter::{
+    FilterResult, filter_metadata, has_title_and_artist, is_private_browsing_placeholder,
+};
 use crate::player;
 use crate::service::Service;
 use crate::track::Track;
@@ -118,6 +120,19 @@ pub fn run(config: Config, services: Vec<Service>) -> Result<()> {
             && is_private_browsing_placeholder(&metadata, &current_track)
         {
             println!("Track ignored (private browsing mode)");
+
+            previous_track.clear();
+            current_play_time = Duration::from_secs(0);
+            scrobbled_current_song = false;
+            timer = Instant::now();
+
+            thread::sleep(POLL_INTERVAL);
+            continue;
+        }
+
+        if config.require_title_and_artist.unwrap_or(true) && !has_title_and_artist(&current_track)
+        {
+            println!("Track ignored (missing title or artist)");
 
             previous_track.clear();
             current_play_time = Duration::from_secs(0);
