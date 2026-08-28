@@ -1,5 +1,43 @@
 # Changelog
 
+## Unreleased
+
+- Fixed when a track counts as a scrobble
+  - A track is only scrobbled if it is longer than 30 seconds and has been played for at least half
+    its duration, or for 4 minutes, whichever occurs earlier
+  - Time spent paused no longer counts as play time, and no longer discards the play time a track
+    had built up: pausing and resuming continues where the track left off instead of starting it over
+  - Tracks whose player does not report a length only count after 4 minutes of play, instead of
+    after 15 seconds
+- Changed submission to happen when a track is done playing, instead of partway through it
+  - The play time rules decide whether a track counts as a scrobble, not when it is submitted:
+    scrobbles now go out the moment a track has played all the way through, or, when its play ends
+    early because it was skipped or its player was stopped or quit, at that point
+  - A track shows as "now playing" for as long as it plays; on Last.fm the status is refreshed while
+    it keeps playing, instead of expiring partway through
+  - Last.fm scrobbles are timestamped with the time and date the track started playing; ListenBrainz
+    listens are still recorded at the time they are submitted, as its API takes no timestamp
+  - The track length is submitted along with Last.fm scrobbles and status updates
+- Removed the `use-track-start-timestamp` option (and its `USE_TRACK_START_TIMESTAMP` environment
+  variable), which is now what Last.fm scrobbles always do
+- A player that is paused no longer counts as stopped: rescrobbled sticks with it until it is
+  resumed, another player starts playing, or the player stops or quits
+- Fixed the album artist not being scrobbled
+  - Previously Last.fm assumed the album artist equalled the track artist, which split compilations,
+    DJ mixes and other various-artists releases into a separate album per track artist
+  - The album artist is read from the player's `xesam:albumArtist` metadata and submitted to Last.fm
+    as `albumArtist` when it differs from the track artist
+  - ListenBrainz is unchanged, as its listen submission API has no album artist field
+- Added the album artist to the filter script interface
+  - It is passed as a fifth input line, after the genres
+  - Scripts can write it as a fourth output line; if that line is missing or empty, the album artist
+    reported by the player is used unchanged
+  - **Note:** filter scripts that read *all* of their standard input and expect exactly four lines
+    (like the bundled Python examples used to) need updating for the extra input line
+- Last.fm scrobbles and status updates are now submitted directly instead of through
+  `rustfm-scrobble-proxy`, which cannot send the `albumArtist` parameter (the crate is still used to
+  log in)
+
 ## v0.10.0 (2026-06-18)
 
 - Added shell expansion (e.g. environment variables, `~`) to secret file resolution

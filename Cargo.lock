@@ -682,13 +682,16 @@ name = "rescrobbled"
 version = "0.10.0"
 dependencies = [
  "anyhow",
+ "attohttpc 0.30.1",
  "dirs",
  "listenbrainz",
+ "md5",
  "mpris",
  "regex",
  "rpassword",
  "rustfm-scrobble-proxy",
  "serde",
+ "serde_json",
  "shellexpand",
  "tempfile",
  "toml",

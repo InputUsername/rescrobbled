@@ -71,25 +71,28 @@ fn is_ignorelisted(config: &Config, player: &Player) -> bool {
     false
 }
 
+/// Look for a (whitelisted, not ignorelisted) player that is playing right now.
+pub fn find_active(config: &Config, finder: &PlayerFinder) -> Option<Player> {
+    let players = finder.iter_players().ok()?;
+
+    for player in players {
+        if let Ok(player) = player
+            && is_active(&player)
+            && is_whitelisted(config, &player)
+            && !is_ignorelisted(config, &player)
+        {
+            return Some(player);
+        }
+    }
+
+    None
+}
+
 /// Wait for any (whitelisted, not ignorelisted) player to become active again.
 pub fn wait_for_player(config: &Config, finder: &PlayerFinder) -> Player {
     loop {
-        let players = match finder.iter_players() {
-            Ok(players) => players,
-            _ => {
-                thread::sleep(INIT_WAIT_TIME);
-                continue;
-            }
-        };
-
-        for player in players {
-            if let Ok(player) = player
-                && is_active(&player)
-                && is_whitelisted(config, &player)
-                && !is_ignorelisted(config, &player)
-            {
-                return player;
-            }
+        if let Some(player) = find_active(config, finder) {
+            return player;
         }
 
         thread::sleep(INIT_WAIT_TIME);

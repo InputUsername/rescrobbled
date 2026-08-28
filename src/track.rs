@@ -15,11 +15,17 @@
 
 use mpris::Metadata;
 
-#[derive(Debug, Default, PartialEq)]
+/// Turn an optional string into an owned one, treating the empty string as absent.
+fn non_empty(value: Option<&str>) -> Option<String> {
+    value.filter(|value| !value.is_empty()).map(str::to_owned)
+}
+
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Track {
     artist: String,
     title: String,
     album: Option<String>,
+    album_artist: Option<String>,
 }
 
 impl Track {
@@ -35,30 +41,24 @@ impl Track {
         self.album.as_deref()
     }
 
+    /// The artist the album is credited to, which can differ from the track
+    /// artist on compilations, DJ mixes and other various-artists releases.
+    pub fn album_artist(&self) -> Option<&str> {
+        self.album_artist.as_deref()
+    }
+
     pub fn new(artist: &str, title: &str, album: Option<&str>) -> Self {
         Self {
             artist: artist.to_owned(),
             title: title.to_owned(),
-            album: album.and_then(|album| {
-                if !album.is_empty() {
-                    Some(album.to_owned())
-                } else {
-                    None
-                }
-            }),
+            album: non_empty(album),
+            album_artist: None,
         }
     }
 
-    pub fn clear(&mut self) {
-        self.artist.clear();
-        self.title.clear();
-        self.album.take();
-    }
-
-    pub fn clone_from(&mut self, other: &Self) {
-        self.artist.clone_from(&other.artist);
-        self.title.clone_from(&other.title);
-        self.album.clone_from(&other.album);
+    pub fn with_album_artist(mut self, album_artist: Option<&str>) -> Self {
+        self.album_artist = non_empty(album_artist);
+        self
     }
 
     pub fn from_metadata(metadata: &Metadata) -> Self {
@@ -71,18 +71,20 @@ impl Track {
 
         let title = metadata.title().unwrap_or("").to_owned();
 
-        let album = metadata.album_name().and_then(|album| {
-            if !album.is_empty() {
-                Some(album.to_owned())
-            } else {
-                None
-            }
-        });
+        let album = non_empty(metadata.album_name());
+
+        let album_artist = non_empty(
+            metadata
+                .album_artists()
+                .as_ref()
+                .and_then(|artists| artists.first().copied()),
+        );
 
         Self {
             artist,
             title,
             album,
+            album_artist,
         }
     }
 }
@@ -107,6 +109,32 @@ mod tests {
         assert_eq!(
             Track::new("Dimension", "Psycho", Some("Organ")).album(),
             Some("Organ")
+        );
+
+        // An empty album artist should result in `None` for `Track::album_artist()`
+
+        assert_eq!(
+            Track::new(
+                "The Herbaliser",
+                "Wall Crawling Giant Insect Breaks",
+                Some("The K&D Sessions")
+            )
+            .with_album_artist(Some(""))
+            .album_artist(),
+            None
+        );
+
+        // A nonempty album artist should result in `Some` for `Track::album_artist()`
+
+        assert_eq!(
+            Track::new(
+                "The Herbaliser",
+                "Wall Crawling Giant Insect Breaks",
+                Some("The K&D Sessions")
+            )
+            .with_album_artist(Some("Kruder & Dorfmeister"))
+            .album_artist(),
+            Some("Kruder & Dorfmeister")
         );
     }
 
@@ -167,5 +195,35 @@ mod tests {
         let track_with_album = Track::from_metadata(&metadata_with_album);
 
         assert_eq!(track_with_album.album(), Some("Business As Usual"));
+        assert_eq!(track_with_album.album_artist(), None);
+
+        // Metadata with an album artist should result in a `Some` for `Track::album_artist()`
+
+        let mut metadata_with_album_artist = HashMap::new();
+        metadata_with_album_artist.insert(
+            "xesam:artist".to_owned(),
+            MetadataValue::Array(vec![MetadataValue::String("The Herbaliser".to_owned())]),
+        );
+        metadata_with_album_artist.insert(
+            "xesam:title".to_owned(),
+            MetadataValue::String("Wall Crawling Giant Insect Breaks".to_owned()),
+        );
+        metadata_with_album_artist.insert(
+            "xesam:album".to_owned(),
+            MetadataValue::String("The K&D Sessions".to_owned()),
+        );
+        metadata_with_album_artist.insert(
+            "xesam:albumArtist".to_owned(),
+            MetadataValue::Array(vec![MetadataValue::String(
+                "Kruder & Dorfmeister".to_owned(),
+            )]),
+        );
+        let metadata_with_album_artist = Metadata::from(metadata_with_album_artist);
+        let track_with_album_artist = Track::from_metadata(&metadata_with_album_artist);
+
+        assert_eq!(
+            track_with_album_artist.album_artist(),
+            Some("Kruder & Dorfmeister")
+        );
     }
 }

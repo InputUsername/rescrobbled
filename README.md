@@ -31,7 +31,6 @@ min-play-time = 0
 player-whitelist = [ "Player MPRIS identity or bus name", "regex.*" ]
 player-ignorelist = [ "name", "regex.*" ]
 filter-script = "path/to/script"
-use-track-start-timestamp = false
 
 [[listenbrainz]]
 url = "Custom API URL"
@@ -60,7 +59,8 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
         <td><code>min-play-time</code></td>
         <td>
             <p>Minimum play time in seconds before a song is scrobbled.</p>
-            <p>By default, track submission respects Last.fm's recommended behavior: songs should only be scrobbled if they have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using <code>min-play-time</code> you can override this.</p>
+            <p>By default, track submission respects Last.fm's recommended behavior: songs only count as a scrobble if they are longer than 30 seconds and have been playing for at least half their duration, or for 4 minutes, whichever comes first. Using <code>min-play-time</code> you can override the play time that is required; songs of 30 seconds or shorter are never scrobbled.</p>
+            <p>Time spent paused does not count towards the play time.</p>
         </td>
     </tr>
     <tr>
@@ -83,18 +83,17 @@ If the config file doesn't exist, rescrobbled will generate an example config fo
                 <li>artist;</li>
                 <li>song title;</li>
                 <li>album name;</li>
-                <li>zero or more comma-separated (<code>,</code>) genre(s)</li>
+                <li>zero or more comma-separated (<code>,</code>) genre(s);</li>
+                <li>album artist</li>
             </ul>
             </p>
-            <p>The script should write the filtered artist, song title and album name on corresponding lines of its standard output.
+            <p>The script should write the filtered artist, song title, album name and album artist on corresponding lines of its standard output.
             This can be used to clean up song names, for example removing "remastered" and similar suffixes.
-            If the filter script does not return any output, the current track will be ignored.</p>
+            If the filter script does not return any output, the current track will be ignored.
+            The album artist line is optional; if it is missing or empty, the album artist reported by the player is used unchanged,
+            so scripts written before this line existed keep working.</p>
             <p>A number of example scripts can be found in the <a href="https://github.com/InputUsername/rescrobbled/tree/master/filter-script-examples"><code>filter-script-examples</code></a> directory.</p>
         </td>
-    </tr>
-    <tr>
-        <td><code>use-track-start-timestamp</code></td>
-        <td>By default, tracks are submitted with a timestamp of the submission time. By setting <code>use-track-start-timestamp</code> to <code>true</code>, tracks are instead submitted with the time the track originally started playing. This is currently Last.fm-only.</td>
     </tr>
     <tr>
         <td><code>[[listenbrainz]]</code></td>
@@ -119,7 +118,6 @@ Some options can be set using environment variables. The following options are s
 | `listenbrainz-token` | `LISTENBRAINZ_TOKEN` |
 | `min-play-time` | `MIN_PLAY_TIME` |
 | `filter-script` | `FILTER_SCRIPT` |
-| `use-track-start-timestamp` | `USE_TRACK_START_TIMESTAMP` |
 
 ### Loading secrets from files
 
@@ -143,6 +141,22 @@ You can run it in the current session using:
 ```
 systemctl --user start rescrobbled.service
 ```
+
+### When a track is scrobbled
+
+Scrobbles are submitted when a track is done playing: the moment it has played all the way
+through, or, if its play ends early because it was skipped or its player was stopped or quit, at
+that point. While a track is playing it shows as "now playing" instead; on Last.fm the status is
+refreshed for as long as the track keeps playing.
+
+Whether a finished track counts as a scrobble at all is a separate question: it has to be longer
+than 30 seconds and have been played for at least half its duration, or for 4 minutes, whichever
+occurs earlier. Time spent paused does not count towards the play time, and a paused track picks up
+where it left off when playback resumes.
+
+Last.fm scrobbles are timestamped with the time and date the track started playing. ListenBrainz
+listens are recorded at the time they are submitted, because the listen submission API takes no
+timestamp.
 
 ## Project resources
 

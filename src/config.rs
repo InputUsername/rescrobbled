@@ -105,7 +105,6 @@ pub struct Config {
     )]
     pub player_ignorelist: Option<RegexSet>,
     pub filter_script: Option<PathBuf>,
-    pub use_track_start_timestamp: Option<bool>,
     pub listenbrainz: Option<Vec<ListenBrainzConfig>>,
 }
 
@@ -119,7 +118,6 @@ impl Config {
             player_whitelist: Some(RegexSet::default()),
             player_ignorelist: Some(RegexSet::default()),
             filter_script: Some(PathBuf::new()),
-            use_track_start_timestamp: Some(false),
             listenbrainz: Some(vec![ListenBrainzConfig {
                 url: Some(String::new()),
                 token: ListenBrainzToken::default(),
@@ -200,10 +198,6 @@ fn override_from_environment(config: &mut Config) -> Result<()> {
         get_envvar::<u64>("MIN_PLAY_TIME").map(|t| t.map(Duration::from_secs))?,
     );
     replace_if_some(&mut config.filter_script, get_envvar("FILTER_SCRIPT")?);
-    replace_if_some(
-        &mut config.use_track_start_timestamp,
-        get_envvar("USE_TRACK_START_TIMESTAMP")?,
-    );
 
     Ok(())
 }
@@ -296,7 +290,6 @@ mod tests {
             std::env::set_var("LISTENBRAINZ_TOKEN", "listenbrainz_token_xyz");
             std::env::set_var("MIN_PLAY_TIME", "30");
             std::env::set_var("FILTER_SCRIPT", "/tmp/filter.sh");
-            std::env::set_var("USE_TRACK_START_TIMESTAMP", "true");
         }
 
         override_from_environment(&mut config).unwrap();
@@ -320,7 +313,6 @@ mod tests {
             config.filter_script.as_deref(),
             Some(Path::new("/tmp/filter.sh"))
         );
-        assert_eq!(config.use_track_start_timestamp, Some(true));
     }
 
     #[test]

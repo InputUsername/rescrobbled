@@ -14,13 +14,11 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::fmt::{self, Write};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use anyhow::{Context, Result, anyhow};
 
 use listenbrainz::ListenBrainz;
-
-use rustfm_scrobble_proxy::{Scrobble, Scrobbler};
 
 mod lastfm;
 
@@ -30,7 +28,7 @@ use crate::track::Track;
 
 /// Represents a music scrobbling service.
 pub enum Service {
-    LastFM(Scrobbler),
+    LastFM(lastfm::Client),
     ListenBrainz {
         client: ListenBrainz,
         is_default: bool,
@@ -42,12 +40,16 @@ impl Service {
     fn lastfm(config: &Config) -> Result<Option<Self>> {
         match (&config.lastfm_key, &config.lastfm_secret) {
             (Some(key), Some(secret)) => {
-                let mut scrobbler = Scrobbler::new(&key.get()?, &secret.get()?);
+                let (key, secret) = (key.get()?, secret.get()?);
 
-                lastfm::authenticate(&mut scrobbler)
+                let session_key = lastfm::authenticate(&key, &secret)
                     .context("Failed to authenticate with Last.fm")?;
 
-                Ok(Some(Self::LastFM(scrobbler)))
+                Ok(Some(Self::LastFM(lastfm::Client::new(
+                    &key,
+                    &secret,
+                    &session_key,
+                ))))
             }
             (None, None) => Ok(None),
             _ => Err(anyhow!("Last.fm API key or API secret are missing")),
@@ -105,14 +107,18 @@ impl Service {
         services
     }
 
-    /// Submit a "now playing" request.
-    pub fn now_playing(&self, track: &Track) -> Result<()> {
-        match self {
-            Self::LastFM(scrobbler) => {
-                let scrobble = Scrobble::new(track.artist(), track.title(), track.album());
+    /// Whether the "now playing" status expires while the track is still
+    /// playing, so it has to be renewed to stay visible for the whole track.
+    pub fn now_playing_expires(&self) -> bool {
+        matches!(self, Self::LastFM(_))
+    }
 
-                scrobbler
-                    .now_playing(&scrobble)
+    /// Submit a "now playing" request.
+    pub fn now_playing(&self, track: &Track, length: Option<Duration>) -> Result<()> {
+        match self {
+            Self::LastFM(client) => {
+                client
+                    .now_playing(track, length)
                     .with_context(|| format!("Failed to update status on {}", self))?;
             }
             Self::ListenBrainz { client, .. } => {
@@ -124,22 +130,23 @@ impl Service {
         Ok(())
     }
 
-    /// Scrobble a track.
-    pub fn submit(&self, track: &Track, track_start: Option<&SystemTime>) -> Result<()> {
+    /// Scrobble a track that started playing at `track_start`. Only Last.fm
+    /// takes a timestamp; ListenBrainz records the listen at submission time.
+    pub fn submit(
+        &self,
+        track: &Track,
+        track_start: SystemTime,
+        length: Option<Duration>,
+    ) -> Result<()> {
         match self {
-            Self::LastFM(scrobbler) => {
-                let mut scrobble = Scrobble::new(track.artist(), track.title(), track.album());
+            Self::LastFM(client) => {
+                let timestamp = track_start
+                    .duration_since(UNIX_EPOCH)
+                    .context("Track started before UNIX epoch")?
+                    .as_secs();
 
-                if let Some(track_start) = track_start {
-                    let timestamp = track_start
-                        .duration_since(UNIX_EPOCH)
-                        .context("Track started before UNIX epoch")?;
-
-                    scrobble.with_timestamp(timestamp.as_secs());
-                }
-
-                scrobbler
-                    .scrobble(&scrobble)
+                client
+                    .scrobble(track, timestamp, length)
                     .with_context(|| format!("Failed to submit track to {}", self))?;
             }
             Self::ListenBrainz { client, .. } => {

@@ -56,12 +56,15 @@ pub fn filter_metadata(config: &Config, track: Track, metadata: &Metadata) -> Re
         .and_then(|value| value.as_str_array())
         .unwrap_or_default();
 
+    // The album artist is appended after the genre to keep the order of the
+    // preceding lines stable for existing filter scripts
     let buffer = format!(
-        "{}\n{}\n{}\n{}\n",
+        "{}\n{}\n{}\n{}\n{}\n",
         track.artist(),
         track.title(),
         track.album().unwrap_or(""),
         genre.join(","),
+        track.album_artist().unwrap_or(""),
     );
     stdin
         .write_all(buffer.as_bytes())
@@ -94,9 +97,17 @@ pub fn filter_metadata(config: &Config, track: Track, metadata: &Metadata) -> Re
         String::from_utf8(output.stdout).context("Filter script stdout is not valid UTF-8")?;
 
     let mut output = output.split('\n');
-    match (output.next(), output.next(), output.next()) {
-        (Some(artist), Some(title), album) => {
-            Ok(FilterResult::Filtered(Track::new(artist, title, album)))
+    match (output.next(), output.next(), output.next(), output.next()) {
+        (Some(artist), Some(title), album, album_artist) => {
+            // Scripts written before the album artist line existed leave it
+            // blank, so fall back to the album artist reported by the player
+            let album_artist = album_artist
+                .filter(|album_artist| !album_artist.is_empty())
+                .or_else(|| track.album_artist());
+
+            Ok(FilterResult::Filtered(
+                Track::new(artist, title, album).with_album_artist(album_artist),
+            ))
         }
         _ => Ok(FilterResult::Ignored),
     }
@@ -208,6 +219,44 @@ echo \"$album\"
             )
             .unwrap(),
             FilterResult::Filtered(Track::new("lorem", "ipsum", None)),
+        );
+
+        // A script that omits the album artist should leave the original one intact
+
+        let track = Track::new("lorem", "ipsum", None).with_album_artist(Some("sit"));
+        let expected = Track::new("lorem", "ipsum", None).with_album_artist(Some("sit"));
+
+        assert_eq!(
+            filter_metadata(&config, track, &Metadata::new("track_id")).unwrap(),
+            FilterResult::Filtered(expected),
+        );
+
+        // A script should be able to read and write the album artist
+
+        let path_album_artist = temp_dir.path().join("filter_album_artist.sh");
+        const FILTER_SCRIPT_ALBUM_ARTIST: &str = "#!/usr/bin/env sh
+read artist
+read title
+read album
+read genre
+read album_artist
+echo \"$artist\"
+echo \"$title\"
+echo \"$album\"
+echo \"AlbumArtist=$album_artist\"
+";
+
+        write_test_script(&path_album_artist, FILTER_SCRIPT_ALBUM_ARTIST);
+
+        config.filter_script = Some(path_album_artist);
+
+        let track = Track::new("lorem", "ipsum", Some("dolor")).with_album_artist(Some("sit"));
+        let expected =
+            Track::new("lorem", "ipsum", Some("dolor")).with_album_artist(Some("AlbumArtist=sit"));
+
+        assert_eq!(
+            filter_metadata(&config, track, &Metadata::new("track_id")).unwrap(),
+            FilterResult::Filtered(expected),
         )
     }
 }
