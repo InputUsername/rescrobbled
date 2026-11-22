@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.10.1 (2026-11-22)
+
+- Updated dependencies
+
 ## v0.10.0 (2026-06-18)
 
 - Added shell expansion (e.g. environment variables, `~`) to secret file resolution
